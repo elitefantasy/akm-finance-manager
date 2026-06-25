@@ -1,0 +1,26 @@
+# User databases
+*.db
+
+# User data
+*.json
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Kivy
+.kivy/
+
+# SQLite
+*.db-journal
+*.sqlite-journal
+
+# Build
+.buildozer/
+bin/
+
+deleted.text
+*.csv
