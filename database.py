@@ -1,8 +1,10 @@
 import sqlite3
+import logging
 import os
 from kivy.app import App
 
 DEFAULT_DB = "finance.db"
+logger = logging.getLogger(__name__)
 
 class DatabaseManager:
 
@@ -15,7 +17,7 @@ class DatabaseManager:
 
         self.conn = sqlite3.connect(self.db_path)
 
-        print(self.db_path)
+        logger.debug("SQLite database path: %s", self.db_path)
 
     def create_database(self):
 

@@ -1,5 +1,6 @@
 import json
 import csv
+import logging
 import os
 import shutil
 from datetime import datetime
@@ -22,6 +23,9 @@ import sqlite3
 from database import DatabaseManager
 from screens import *
 from dialogs import DialogManager
+
+
+logger = logging.getLogger(__name__)
 
 
 try:
@@ -184,7 +188,7 @@ class FinanceManagerApp(App):
         rows = self.db.fetch_query(
             "SELECT * FROM transactions"
         )
-        print(rows)
+        logger.debug("Database transactions: %s", rows)
         
         
          
@@ -252,8 +256,6 @@ class FinanceManagerApp(App):
                     report.get(cat, 0)
                     + t["amount"]
                 )
-            #print(report)
-
         result = ""
 
         for cat, amount in report.items():
@@ -434,7 +436,8 @@ class FinanceManagerApp(App):
                 
                 recent_box.add_widget(row)
                 
-        except Exception as e:print("Recent Box Error:", e)
+        except Exception:
+            logger.exception("Recent Box Error")
         
         self.refresh_transaction_view()
         self.refresh_add_screen_history()
@@ -495,8 +498,8 @@ class FinanceManagerApp(App):
     
                 recent_list.add_widget(btn) #
     
-        except Exception as e:
-            print("Recent List Error:", e)
+        except Exception:
+            logger.exception("Recent List Error")
     
     
     def update_search(self, text):
@@ -1099,7 +1102,6 @@ class FinanceManagerApp(App):
 
             screen = self.root.get_screen("edit")
             
-            #print("OLD:", screen.ids.date.text)
             old_time = (
                 screen.ids.date.text
                 .split(" ")[1]
@@ -1108,13 +1110,11 @@ class FinanceManagerApp(App):
             screen.ids.date.text = (
                 f"{date} {old_time}"
             )
-           # print(screen.ids.date.text)
-           # print("NEW:", screen.ids.date.text)
 
             popup.dismiss()
             
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("Date popup error")
             popup.dismiss()
     
     def add_recurring(self, amount, category, day):
