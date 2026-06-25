@@ -48,6 +48,21 @@ class DatabaseManager:
             name TEXT UNIQUE
         )
         """)
+
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_transactions_date
+        ON transactions(date)
+        """)
+
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_transactions_category
+        ON transactions(category)
+        """)
+
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_transactions_type
+        ON transactions(type)
+        """)
     
         default_categories = [
             "Food",
@@ -119,7 +134,9 @@ class DatabaseManager:
 
         values = tuple(transaction.values())
 
-        self.execute_query(
+        cursor = self.conn.cursor()
+
+        cursor.execute(
 
             f"""
             INSERT INTO transactions
@@ -130,6 +147,10 @@ class DatabaseManager:
 
             values
         )
+
+        self.conn.commit()
+
+        return cursor.lastrowid
     
     def   delete_transaction_db(self,transaction_id):
         self.execute_query(

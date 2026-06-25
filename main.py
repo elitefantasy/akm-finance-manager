@@ -1,5 +1,4 @@
 import json
-import time
 import csv
 import os
 import shutil
@@ -284,17 +283,16 @@ class FinanceManagerApp(App):
             return
             
         transaction = {
-            "id": int(time.time()),
             "type": ttype,
             "amount": (amount),
             "category": category,
             "note": note, 
             "date": datetime.now().strftime("%d-%m-%Y %H:%M")
             }
+
+        transaction["id"] = self.db.save_transaction_db(transaction)
         
         self.transactions.append(transaction)
-
-        self.db.save_transaction_db(transaction)
         
         self.update_dashboard()
         
@@ -1173,9 +1171,6 @@ class FinanceManagerApp(App):
                 ) != current_period):
 
                 transaction = {
-                    "id": int(
-                        time.time()
-                    ),
                     "type": "Expense",
                     "amount":r["amount"],
                     "category":r["category"],
@@ -1184,9 +1179,9 @@ class FinanceManagerApp(App):
                     "date":today.strftime("%d-%m-%Y %H:%M")
                 }
 
-                self.transactions.append(transaction)
+                transaction["id"] = self.db.save_transaction_db(transaction)
 
-                self.db.save_transaction_db(transaction)
+                self.transactions.append(transaction)
 
                 r["last_added"] = (current_period)
 
