@@ -461,7 +461,7 @@ class FinanceManagerApp(App):
                     text=t["date"].split()[0],
                     font_size=Font.SMALL,
                     size_hint_y=None,
-                    height=20,
+                    height = Font.SMALL * 2,
                     color=(0.55, 0.55, 0.55, 1),
                     halign="left",
                     valign="middle"
