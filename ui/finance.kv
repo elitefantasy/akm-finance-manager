@@ -145,7 +145,7 @@
 <TransactionRow>:
 
     size_hint_y: None
-    height: 80
+    height: 90
     spacing: 5
 
     canvas.before:
@@ -169,13 +169,14 @@
     BoxLayout:
         orientation: "vertical" #left side
         size_hint_x: .65
-        padding: [10,0]
+        padding: [10,6]
 
         Label:
             text: root.category
             bold: True
             halign: "left"
             text_size: self.size
+			height: 32
 
         Label:
             text: root.date
@@ -183,6 +184,8 @@
             color: .7,.7,.7,1
             halign: "left"
             text_size: self.size
+			size_hint_y: None
+			height: 24
 
     Label:
         text: root.amount
@@ -418,12 +421,12 @@
             data: app.transaction_data
             
             RecycleBoxLayout:
-                default_size: None, 80
+                default_size: None, 90
                 default_size_hint: 1, None
                 size_hint_y: None
                 height: self.minimum_height
                 orientation: "vertical"
-                spacing: 5
+                spacing: 2
 
         
         
