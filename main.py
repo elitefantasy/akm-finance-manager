@@ -61,12 +61,6 @@ class FinanceManagerApp(App):
     recent_text = StringProperty("")
     top_category_text = StringProperty("None")
     monthly_expense_text = StringProperty("₹0")
-
-    highest_expense_category = StringProperty("None")
-    highest_expense_amount = StringProperty("₹0")
-
-    highest_income_category = StringProperty("None")
-    highest_income_amount = StringProperty("₹0")
     
     categories_text = StringProperty("")
     # shows recent transaction in add transaction screen
@@ -486,15 +480,7 @@ class FinanceManagerApp(App):
         self.top_category_text = self.top_category()
         self.monthly_expense_text = self.monthly_expense()
 
-        (
-            self.highest_expense_category,
-            self.highest_expense_amount
-        ) = reports.highest_expense(self.transactions)
-
-        (
-            self.highest_income_category,
-            self.highest_income_amount
-        ) = reports.highest_income(self.transactions)
+        
     
     from kivy.uix.button import Button
 
