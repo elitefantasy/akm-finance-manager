@@ -24,3 +24,6 @@ bin/
 
 deleted.text
 *.csv
+
+# python virtual env
+.venv/

@@ -30,6 +30,13 @@ from core.dialogs import DialogManager
 from core.logger import get_logger
 from core.utils import project_path
 from ui.screens import *
+from ui.ui_metrics import (
+    Font,
+    Size,
+    Spacing,
+    Padding,
+    Radius,
+)
 
 
 logger = get_logger(__name__)
@@ -376,7 +383,7 @@ class FinanceManagerApp(App):
                 row = BoxLayout(
                     orientation="vertical",
                     size_hint_y=None,
-                    height=45)
+                    height=Size.LIST_ITEM_HEIGHT)
                 
                 top_row = BoxLayout(
                   orientation="horizontal")
@@ -441,11 +448,11 @@ class FinanceManagerApp(App):
                         f"{sign}₹{t['amount']:.0f}"
                     ),
                     size_hint_y=None,
-                    height=65,
+                    height=Size.RECENT_ITEM_HEIGHT,
                     background_normal = "",
                     background_color=bg_color,
                     color=text_color,
-                    font_size=20,
+                    font_size=Font.LARGE,
                     halign="left",
                     valign="middle"
                 )
@@ -680,14 +687,14 @@ class FinanceManagerApp(App):
 
         content = BoxLayout(
             orientation="vertical",
-            spacing=10,
-            padding=10
+            spacing=Spacing.SMALL,
+            padding=Spacing.NORMAL
         )
     
         popup = Popup(
             title="Import Database",
             content=content,
-            size_hint=(0.8,0.6)
+            size_hint=Size.POPUP_MEDIUM
         )
     
         databases = backup_service.list_backup_databases()
@@ -707,7 +714,7 @@ class FinanceManagerApp(App):
                 btn = Button(
                     text=db,
                     size_hint_y=None,
-                    height=50
+                    height=Size.BUTTON_HEIGHT
                 )
     
                 btn.bind(
