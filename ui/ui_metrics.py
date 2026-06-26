@@ -18,6 +18,11 @@ class Font:
     LARGE = sp(20 * UI_SCALE)
     TITLE = sp(24 * UI_SCALE)
 
+    CARD_TITLE = sp(18 * UI_SCALE)
+    CARD_VALUE = sp(30 * UI_SCALE)
+
+    NAVIGATION = sp(18 * UI_SCALE)
+
 
 # --------------------------------------------------
 # Heights / Widths
@@ -28,14 +33,17 @@ class Size:
     BUTTON_HEIGHT = dp(48 * UI_SCALE)
     TEXT_INPUT_HEIGHT = dp(48 * UI_SCALE)
 
+    # Dashboard
+    BALANCE_CARD_HEIGHT = dp(120 * UI_SCALE)
+    STAT_CARD_HEIGHT = dp(110 * UI_SCALE)
+    DASHBOARD_RECENT_HEIGHT = dp(320 * UI_SCALE)
+
     # Lists
     LIST_ITEM_HEIGHT = dp(45 * UI_SCALE)
     RECENT_ITEM_HEIGHT = dp(65 * UI_SCALE)
 
-    # Popups
-    POPUP_SMALL = (0.8, 0.4)
-    POPUP_MEDIUM = (0.8, 0.6)
-    POPUP_LARGE = (0.8, 0.7)
+    # Navigation
+    BOTTOM_NAV_HEIGHT = dp(72 * UI_SCALE)
 
 
 # --------------------------------------------------
@@ -55,6 +63,10 @@ class Spacing:
 class Padding:
     SCREEN = dp(16 * UI_SCALE)
     CARD = dp(12 * UI_SCALE)
+
+
+class Border:
+    CARD_WIDTH = dp(1)
 
 
 # --------------------------------------------------

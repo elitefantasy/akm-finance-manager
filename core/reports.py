@@ -173,3 +173,42 @@ def _expense_totals_by_category(transactions):
             )
 
     return totals
+
+def highest_expense(transactions):
+    expenses = [
+        t for t in transactions
+        if t["type"] == "Expense"
+    ]
+
+    if not expenses:
+        return "None", "₹0"
+
+    highest = max(
+        expenses,
+        key=lambda t: t["amount"]
+    )
+
+    return (
+        highest["category"],
+        f"₹{highest['amount']:.0f}"
+    )
+
+
+def highest_income(transactions):
+    incomes = [
+        t for t in transactions
+        if t["type"] == "Income"
+    ]
+
+    if not incomes:
+        return "None", "₹0"
+
+    highest = max(
+        incomes,
+        key=lambda t: t["amount"]
+    )
+
+    return (
+        highest["category"],
+        f"₹{highest['amount']:.0f}"
+    )

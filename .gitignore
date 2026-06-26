@@ -27,3 +27,7 @@ deleted.text
 
 # python virtual env
 .venv/
+
+# Windows Explorer
+[Dd]esktop.ini
+Thumbs.db

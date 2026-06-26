@@ -34,22 +34,22 @@
                 # BALANCE CARD
                 Card:
                     size_hint_y: None
-                    height: 90
+                    height: app.metrics.Size.BALANCE_CARD_HEIGHT
       
                     Label:
                         text: "💰 Balance"
-                        font_size: 18
+                        font_size: app.metrics.Font.CARD_TITLE
       
                     Label:
                         text: str(app.balance)
                         bold: True
-                        font_size: 24
+                        font_size: app.metrics.Font.CARD_VALUE
                 
     
                 # INCOME + EXPENSE CARDS
                 BoxLayout:
                     size_hint_y: None
-                    height: 90
+                    height: app.metrics.Size.STAT_CARD_HEIGHT
                     spacing: 10
     
                     Card:
@@ -67,7 +67,7 @@
                         
                         Label:
                             text: app.income
-                            font_size:22
+                            font_size: app.metrics.Font.CARD_VALUE
     
                     Card:
                         canvas.before:
@@ -84,17 +84,18 @@
                 
                         Label:
                             text: app.expense
-                            font_size:22
+                            font_size: app.metrics.Font.CARD_VALUE
     
                 # TOP CATEGORY CARD and This Month
                 BoxLayout:
                     size_hint_y: None
-                    height: 90
+                    height: app.metrics.Size.STAT_CARD_HEIGHT
                     spacing: 10
                     
                     Card:
                         Label:
                             text:"🏆 Top Category"
+							font_size: app.metrics.Font.CARD_TITLE
                 
                         Label:
                             text: app.top_category_text
@@ -102,36 +103,70 @@
                     Card:
                         Label:
                             text:"📅 This Month"
+							font_size: app.metrics.Font.CARD_TITLE
                         Label:
                             text: app.monthly_expense_text
+				
+				# Highest Expense / Highest Income
+
+				BoxLayout:
+					size_hint_y: None
+					height: app.metrics.Size.STAT_CARD_HEIGHT
+					spacing: 10
+
+					Card:
+
+						Label:
+							text: "🔥 Highest Expense"
+							font_size: app.metrics.Font.CARD_TITLE
+
+						Label:
+							text: app.highest_expense_category
+
+						Label:
+							text: app.highest_expense_amount
+							bold: True
+
+					Card:
+
+						Label:
+							text: "💰 Highest Income"
+							font_size: app.metrics.Font.CARD_TITLE
+
+						Label:
+							text: app.highest_income_category
+
+						Label:
+							text: app.highest_income_amount
+							bold: True
     
             
     
-                # RECENT TRANSACTIONS
-                Label:
-                    text: "Recent Transactions"
-                    font_size: 22
-                    size_hint_y: None
-                    height: 70
-                    
-                BoxLayout:
-                    id:recent_box
-                    orientation:"vertical"
-                    size_hint_y:None
-                    height:self.minimum_height
-                Button:
-                    text:"View All"
-                    size_hint_y:None
-                    height:50
-                    
-                    on_press:app.go_to_screen("history")
-     
+                # -------------------------
+				# Recent Transactions
+				# -------------------------
+
+				Label:
+					text: "Recent Transactions"
+					font_size: 22
+					bold: True
+					size_hint_y: None
+					height: 45
+
+				BoxLayout:
+					id: recent_box
+					orientation: "vertical"
+					size_hint_y: None
+					height: self.minimum_height
+
+				Button:
+					text: "View All"
+					size_hint_y: None
+					height: app.metrics.Size.BUTTON_HEIGHT
+
+					on_press:
+						app.go_to_screen("history")
     
-                #Button:
-                  #  text: "Add Transaction"
-                  #  size_hint_y: None
-                  #  height: 60
-                  #  on_press: app.root.current = "add"
                 
         BottomNav:
             
@@ -771,30 +806,35 @@
 <BottomNav@BoxLayout>
 
     size_hint_y: None
-    height: 60
+    height: app.metrics.Size.BOTTOM_NAV_HEIGHT
 
     Button:
         text: "Home"
+		font_size: app.metrics.Font.NAVIGATION
         background_color:(0.2,0.5,1,1) if app.current_screen in ["dashboard","statistic","datamanagement","manage_transactions","manage_recurring","categories"] else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("dashboard")
 
     Button:
         text: "Add"
+		font_size: app.metrics.Font.NAVIGATION
         background_color:(0.2,0.5,1,1) if app.current_screen == "add" else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("add")
 
     Button:
         text: "History"
+		font_size: app.metrics.Font.NAVIGATION
         background_color:(0.2,0.5,1,1) if app.current_screen == "history" else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("history")
 
     Button:
         text: "Recurring"
+		font_size: app.metrics.Font.NAVIGATION
         background_color:(0.2,0.5,1,1) if app.current_screen == "recurring" else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("recurring")
 
     Button:
         text: "More"
+		font_size: app.metrics.Font.NAVIGATION
         background_color:(0.3,0.3,0.3,1)
         on_press: app.more_menu()
 

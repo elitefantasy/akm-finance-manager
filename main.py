@@ -19,6 +19,7 @@ from kivy.uix.spinner import Spinner
 from core import backup_service
 from core import database_service
 from core import reports
+from core.transaction_formatter import TransactionFormatter
 from core.constants import (
     CSV_EXPORT_FILE,
     DEFAULT_DB,
@@ -46,6 +47,8 @@ BACKUP_DIR = get_backup_dir()
 Builder.load_file(project_path("ui", "finance.kv"))
 
 class FinanceManagerApp(App):
+    
+    from ui import ui_metrics as metrics
 
     balance = NumericProperty(0)
     income = StringProperty("₹0")
@@ -58,6 +61,12 @@ class FinanceManagerApp(App):
     recent_text = StringProperty("")
     top_category_text = StringProperty("None")
     monthly_expense_text = StringProperty("₹0")
+
+    highest_expense_category = StringProperty("None")
+    highest_expense_amount = StringProperty("₹0")
+
+    highest_income_category = StringProperty("None")
+    highest_income_amount = StringProperty("₹0")
     
     categories_text = StringProperty("")
     # shows recent transaction in add transaction screen
@@ -327,27 +336,9 @@ class FinanceManagerApp(App):
                 ):
                     continue
 
-            sign = "+"
-            if t["type"] == "Expense":
-               sign = "-"
-
-            note = t.get("note", "No Note")
-    
-            self.transaction_data.append({
-
-                "category": t["category"],
-            
-                "amount": f"{sign}₹{t['amount']}",
-            
-                "note": note,
-            
-                "date": t["date"].split()[0],
-
-                "amount_color":[0,1,0,1] if t["type"] == "Income" else [1,0.3,0.3,1],
-            
-                "transaction_id": t["id"]
-            
-            })
+            self.transaction_data.append(
+                TransactionFormatter.history(t)
+            )
             
 
     def update_dashboard(self):
@@ -379,44 +370,131 @@ class FinanceManagerApp(App):
             recent_box = (dashboard.ids.recent_box)
             recent_box.clear_widgets()
             
-            for t in self.transactions[-3:][::-1]:
+            for t in self.transactions[-5:][::-1]:
+
                 row = BoxLayout(
                     orientation="vertical",
                     size_hint_y=None,
-                    height=Size.LIST_ITEM_HEIGHT)
+                    height=95,
+                    spacing=4,
+                    padding=[8, 6]
                 
-                top_row = BoxLayout(
-                  orientation="horizontal")
+                )
 
-                top_row.add_widget(Label(text=t["category"]))
-                
-                amount_label =Label(
+                # --------------------------
+                # First Row
+                # Category + Amount
+                # --------------------------
+
+                top_row = BoxLayout(
+                    orientation="horizontal",
+                    size_hint_y=None,
+                    height=28
+                )
+
+                category_label = Label(
+                    text=t["category"],
+                    bold=True,
+                    halign="left",
+                    valign="middle"
+                )
+
+                category_label.bind(
+                    size=lambda instance, value:
+                    setattr(instance, "text_size", value)
+                )
+
+                amount_label = Label(
                     text=(
-                     f"+₹{t['amount']}"
-                    if t["type"] == "Income"
-                    else
-                         f"-₹{t['amount']}"
-                        ),
-                        color=(
-                          (0,1,0,1) #green 
-                        if t["type"]== "Income"
-                        else
-                        (1,0,0,1) # Red
-                         )
-                     )
+                        f"+₹{t['amount']:.0f}"
+                        if t["type"] == "Income"
+                        else f"-₹{t['amount']:.0f}"
+                    ),
+                    bold=True,
+                    halign="right",
+                    valign="middle",
+                    color=(
+                        (0, 1, 0, 1)
+                        if t["type"] == "Income"
+                        else (1, 0.3, 0.3, 1)
+                    )
+                )
+
+                amount_label.bind(
+                    size=lambda instance, value:
+                    setattr(instance, "text_size", value)
+                )
+
+                top_row.add_widget(category_label)
                 top_row.add_widget(amount_label)
 
                 row.add_widget(top_row)
-                
+
+                # --------------------------
+                # Note
+                # --------------------------
+
+                note = t.get("note", "").strip()
+
+                if note:
+
+                    note_label = Label(
+                        text=note,
+                        size_hint_y=None,
+                        height=24,
+                        color=(0.75, 0.75, 0.75, 1),
+                        halign="left",
+                        valign="middle"
+                    )
+
+                    note_label.bind(
+                        size=lambda instance, value:
+                        setattr(instance, "text_size", value)
+                    )
+
+                    row.add_widget(note_label)
+
+                # --------------------------
+                # Date
+                # --------------------------
+
+                date_label = Label(
+                    text=t["date"].split()[0],
+                    size_hint_y=None,
+                    height=20,
+                    color=(0.55, 0.55, 0.55, 1),
+                    halign="left",
+                    valign="middle"
+                )
+
+                date_label.bind(
+                    size=lambda instance, value:
+                    setattr(instance, "text_size", value)
+                )
+
+                row.add_widget(date_label)
+
                 recent_box.add_widget(row)
                 
+              
+                            
         except Exception:
             logger.exception("Recent Box Error")
         
         self.refresh_transaction_view()
         self.refresh_add_screen_history()
-        self.top_category_text=(self.top_category())
-        self.monthly_expense_text=self.monthly_expense()
+        self.top_category_text = self.top_category()
+        self.monthly_expense_text = self.monthly_expense()
+
+        (
+            self.highest_expense_category,
+            self.highest_expense_amount
+        ) = reports.highest_expense(self.transactions)
+
+        (
+            self.highest_income_category,
+            self.highest_income_amount
+        ) = reports.highest_income(self.transactions)
     
     from kivy.uix.button import Button
 
