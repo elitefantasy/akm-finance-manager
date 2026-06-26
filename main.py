@@ -369,9 +369,9 @@ class FinanceManagerApp(App):
                 row = BoxLayout(
                     orientation="vertical",
                     size_hint_y=None,
-                    height=95,
-                    spacing=4,
-                    padding=[8, 6]
+                    height=120,
+                    spacing=6,
+                    padding=[10, 8]
                 
                 )
 
@@ -389,6 +389,9 @@ class FinanceManagerApp(App):
                 category_label = Label(
                     text=t["category"],
                     bold=True,
+                    font_size=Font.NORMAL,
+                    size_hint_y=None,
+                    height=28,
                     halign="left",
                     valign="middle"
                 )
@@ -405,6 +408,9 @@ class FinanceManagerApp(App):
                         else f"-₹{t['amount']:.0f}"
                     ),
                     bold=True,
+                    font_size=Font.NORMAL,
+                    size_hint_y=None,
+                    height=28,
                     halign="right",
                     valign="middle",
                     color=(
@@ -434,6 +440,7 @@ class FinanceManagerApp(App):
 
                     note_label = Label(
                         text=note,
+                        font_size=Font.SMALL,
                         size_hint_y=None,
                         height=24,
                         color=(0.75, 0.75, 0.75, 1),
@@ -454,6 +461,7 @@ class FinanceManagerApp(App):
 
                 date_label = Label(
                     text=t["date"].split()[0],
+                    font_size=Font.SMALL,
                     size_hint_y=None,
                     height=20,
                     color=(0.55, 0.55, 0.55, 1),
