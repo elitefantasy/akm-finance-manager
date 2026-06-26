@@ -1,6 +1,5 @@
 import json
 import csv
-import logging
 import os
 from datetime import datetime
 
@@ -17,36 +16,27 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 
-from database import DatabaseManager
-import backup_service
-import database_service
-import reports
-from screens import *
-from dialogs import DialogManager
+from core import backup_service
+from core import database_service
+from core import reports
+from core.constants import (
+    CSV_EXPORT_FILE,
+    DEFAULT_DB,
+    SETTINGS_FILE,
+    get_backup_dir,
+)
+from core.database import DatabaseManager
+from core.dialogs import DialogManager
+from core.logger import get_logger
+from core.utils import project_path
+from ui.screens import *
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+BACKUP_DIR = get_backup_dir()
 
 
-try:
-
-    from android.storage import (
-        primary_external_storage_path
-    )
-
-    BACKUP_DIR = os.path.join(
-        primary_external_storage_path(),
-        "Download",
-        "FinanceManager"
-    )
-
-except:
-
-    BACKUP_DIR = (
-        "/storage/emulated/0/Download/FinanceManager"
-    )
-
-Builder.load_file("finance.kv")
+Builder.load_file(project_path("ui", "finance.kv"))
 
 class FinanceManagerApp(App):
 
@@ -67,7 +57,7 @@ class FinanceManagerApp(App):
     add_screen_history = StringProperty("")
     
     current_filter = StringProperty("All")
-    current_database=StringProperty("finance.db")
+    current_database=StringProperty(DEFAULT_DB)
     current_screen = StringProperty("dashboard")
     
     selected_transaction_id = None
@@ -110,7 +100,8 @@ class FinanceManagerApp(App):
         
         # open settings json
         settings_path = os.path.join(
-            App.get_running_app().user_data_dir,"settings.json"
+            App.get_running_app().user_data_dir,
+            SETTINGS_FILE
         )
         try:
             with open(
@@ -119,14 +110,14 @@ class FinanceManagerApp(App):
                     
                     db_name=settings.get(
                         "database",
-                        "finance.db")
+                        DEFAULT_DB)
             self.log(f"loaded database from settings: {db_name}")
                     
                     
         except Exception as e:
             self.log(f"Settings error:{e}")
             
-            db_name="finance.db"
+            db_name=DEFAULT_DB
                 
         
         self.transactions = []
@@ -533,7 +524,7 @@ class FinanceManagerApp(App):
     def export_csv(self):
 
         with open(
-            "finance_export.csv",
+            CSV_EXPORT_FILE,
             "w",
             newline=""
         ) as file:

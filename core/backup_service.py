@@ -1,10 +1,11 @@
 import os
 import shutil
 
-from database import DatabaseManager
+from core.constants import get_backup_dir
+from core.database import DatabaseManager
 
 
-BACKUP_DIR = "/storage/emulated/0/Download/FinanceManager"
+BACKUP_DIR = get_backup_dir()
 
 
 def backup_database(source_path, database_name, backup_dir=BACKUP_DIR):

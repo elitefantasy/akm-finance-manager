@@ -1,33 +1,16 @@
 import sqlite3
-import logging
 import os
 from pathlib import Path
 from kivy.app import App
 
-DEFAULT_DB = "finance.db"
-logger = logging.getLogger(__name__)
+from core.constants import (
+    DEFAULT_CATEGORIES,
+    DEFAULT_DB,
+    REQUIRED_SCHEMA,
+)
+from core.logger import get_logger
 
-REQUIRED_SCHEMA = {
-    "transactions": {
-        "id": "INTEGER",
-        "type": "TEXT",
-        "amount": "REAL",
-        "category": "TEXT",
-        "note": "TEXT",
-        "date": "TEXT",
-    },
-    "recurring_transactions": {
-        "id": "INTEGER",
-        "amount": "REAL",
-        "category": "TEXT",
-        "day": "INTEGER",
-        "last_added": "TEXT",
-    },
-    "categories": {
-        "id": "INTEGER",
-        "name": "TEXT",
-    },
-}
+logger = get_logger(__name__)
 
 class DatabaseManager:
 
@@ -142,16 +125,7 @@ class DatabaseManager:
         ON transactions(type)
         """)
     
-        default_categories = [
-            "Food",
-            "Travel",
-            "Shopping",
-            "Medical",
-            "Education",
-            "Other"
-        ]
-    
-        for category in default_categories:
+        for category in DEFAULT_CATEGORIES:
     
             cursor.execute(
                 """

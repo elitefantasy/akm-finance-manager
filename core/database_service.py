@@ -1,7 +1,8 @@
 import json
 import os
 
-from database import DatabaseManager
+from core.constants import SETTINGS_FILE
+from core.database import DatabaseManager
 
 
 def create_database(name):
@@ -22,7 +23,7 @@ def list_databases(user_data_dir):
 
 
 def save_selected_database(user_data_dir, db_name):
-    settings_path = os.path.join(user_data_dir, "settings.json")
+    settings_path = os.path.join(user_data_dir, SETTINGS_FILE)
 
     with open(settings_path, "w") as settings_file:
         json.dump({"database": db_name}, settings_file)
