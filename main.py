@@ -51,8 +51,8 @@ class FinanceManagerApp(App):
     from ui import ui_metrics as metrics
 
     balance = NumericProperty(0)
-    income = StringProperty("₹0")
-    expense = StringProperty("₹0")
+    income = NumericProperty(0)
+    expense = NumericProperty(0)
     total_income = NumericProperty(0)
     total_expense = NumericProperty(0)
 
@@ -348,9 +348,11 @@ class FinanceManagerApp(App):
         self.total_income = income
         self.total_expense = expense
     
-        self.income = f"₹{income:.0f}"
-        self.expense = f"₹{expense:.0f}"
-        self.balance = income - expense
+        self.income = income
+        self.expense = expense
+        balance = income - expense
+
+        self.balance = balance
     
         recent = ""
         
@@ -402,11 +404,7 @@ class FinanceManagerApp(App):
                 )
 
                 amount_label = Label(
-                    text=(
-                        f"+₹{t['amount']:.0f}"
-                        if t["type"] == "Income"
-                        else f"-₹{t['amount']:.0f}"
-                    ),
+                    text=TransactionFormatter.amount(t),
                     bold=True,
                     font_size=Font.NORMAL,
                     size_hint_y=None,

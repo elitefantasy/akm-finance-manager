@@ -2,13 +2,14 @@ from datetime import datetime
 
 
 class TransactionFormatter:
+
     @staticmethod
     def amount(transaction):
-        """Return formatted amount with sign."""
+        """Return formatted amount with sign and commas."""
 
         sign = "+" if transaction["type"] == "Income" else "-"
 
-        return f"{sign}₹{transaction['amount']:.0f}"
+        return f"{sign}₹{transaction['amount']:,.0f}"
 
     @staticmethod
     def amount_color(transaction):
@@ -29,9 +30,18 @@ class TransactionFormatter:
 
     @staticmethod
     def date(transaction):
-        """Return only the date portion."""
+        """Return formatted date."""
 
-        return transaction["date"].split()[0]
+        try:
+            dt = datetime.strptime(
+                transaction["date"],
+                "%d-%m-%Y %H:%M"
+            )
+
+            return dt.strftime("%d %b %Y")
+
+        except Exception:
+            return transaction["date"].split()[0]
 
     @staticmethod
     def history(transaction):

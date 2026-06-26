@@ -41,7 +41,7 @@
                         font_size: app.metrics.Font.CARD_TITLE
       
                     Label:
-                        text: str(app.balance)
+                        text: f"-₹{abs(app.balance):,.0f}" if app.balance < 0 else f"₹{app.balance:,.0f}"
                         bold: True
                         font_size: app.metrics.Font.CARD_VALUE
                 
@@ -66,7 +66,8 @@
                             text:"📈 Income"
                         
                         Label:
-                            text: app.income
+                            text: f"₹{app.income:,.0f}"
+							color: 0,1,0,1
                             font_size: app.metrics.Font.CARD_VALUE
     
                     Card:
@@ -83,7 +84,8 @@
                             text:"📉 Expense"
                 
                         Label:
-                            text: app.expense
+                            text: f"₹{app.expense:,.0f}"
+							color: 1,.35,.35,1
                             font_size: app.metrics.Font.CARD_VALUE
     
                 # TOP CATEGORY CARD and This Month
@@ -116,7 +118,7 @@
 
 				Label:
 					text: "Recent Transactions"
-					font_size: 22
+					font_size: app.metrics.Font.CARD_TITLE
 					bold: True
 					size_hint_y: None
 					height: 45

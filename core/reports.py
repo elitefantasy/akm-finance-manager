@@ -39,7 +39,7 @@ def monthly_expense(transactions):
             if date.month == month:
                 total += transaction["amount"]
 
-    return f"₹{total}"
+    return f"₹{total:,.0f}"
 
 
 def expense_summary(transactions):
