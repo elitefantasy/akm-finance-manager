@@ -1,12 +1,88 @@
 import sqlite3
 import logging
 import os
+from pathlib import Path
 from kivy.app import App
 
 DEFAULT_DB = "finance.db"
 logger = logging.getLogger(__name__)
 
+REQUIRED_SCHEMA = {
+    "transactions": {
+        "id": "INTEGER",
+        "type": "TEXT",
+        "amount": "REAL",
+        "category": "TEXT",
+        "note": "TEXT",
+        "date": "TEXT",
+    },
+    "recurring_transactions": {
+        "id": "INTEGER",
+        "amount": "REAL",
+        "category": "TEXT",
+        "day": "INTEGER",
+        "last_added": "TEXT",
+    },
+    "categories": {
+        "id": "INTEGER",
+        "name": "TEXT",
+    },
+}
+
 class DatabaseManager:
+
+    @staticmethod
+    def validate_database_schema(db_path):
+        try:
+            db_uri = Path(db_path).resolve().as_uri() + "?mode=ro"
+
+            conn = sqlite3.connect(db_uri, uri=True)
+            try:
+                for table, expected_columns in REQUIRED_SCHEMA.items():
+                    rows = conn.execute(
+                        f"PRAGMA table_info({table})"
+                    ).fetchall()
+
+                    if not rows:
+                        return (
+                            False,
+                            f"Missing required table: {table}"
+                        )
+
+                    columns = {
+                        row[1]: row[2].upper()
+                        for row in rows
+                    }
+
+                    for column, expected_type in expected_columns.items():
+                        actual_type = columns.get(column)
+
+                        if actual_type is None:
+                            return (
+                                False,
+                                f"Missing column: {table}.{column}"
+                            )
+
+                        if actual_type != expected_type:
+                            return (
+                                False,
+                                (
+                                    f"Invalid column type for "
+                                    f"{table}.{column}"
+                                )
+                            )
+            finally:
+                conn.close()
+
+            return True, ""
+
+        except sqlite3.DatabaseError:
+            logger.exception("Imported database schema validation failed")
+            return False, "Selected file is not a valid SQLite database"
+
+        except OSError:
+            logger.exception("Imported database file could not be read")
+            return False, "Database file could not be read"
 
     def __init__(self, db_name=DEFAULT_DB):
         self.db_name= db_name

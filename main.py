@@ -2,7 +2,6 @@ import json
 import csv
 import logging
 import os
-import shutil
 from datetime import datetime
 
 from kivy.app import App
@@ -18,9 +17,10 @@ from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
 
-import sqlite3
-
 from database import DatabaseManager
+import backup_service
+import database_service
+import reports
 from screens import *
 from dialogs import DialogManager
 
@@ -243,31 +243,7 @@ class FinanceManagerApp(App):
     
     
     def category_report(self):
-
-        report = {}
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                cat = t["category"]
-
-                report[cat] = (
-                    report.get(cat, 0)
-                    + t["amount"]
-                )
-        result = ""
-
-        for cat, amount in report.items():
-
-            result += (
-                f"{cat}: ₹{amount}\n"
-            )
-        
-        if result == "":
-            result = "no expense data available"
-
-        return result
+        return reports.category_report(self.transactions)
 
     # Transaction Structure
     def add_transaction(self, amount, category, note, ttype):
@@ -513,27 +489,7 @@ class FinanceManagerApp(App):
         self.refresh_transaction_view()
     
     def top_category(self):
-
-        categories = {}
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                cat = t["category"]
-
-                categories[cat] = (
-                    categories.get(cat, 0)
-                    + t["amount"]
-                )
-
-        if not categories:
-            return "None"
-
-        return max(
-            categories,
-            key=categories.get
-        )
+        return reports.top_category(self.transactions)
 
     # also check refresh_add_screen_history(above)
     def recent_transactions(self):
@@ -564,24 +520,7 @@ class FinanceManagerApp(App):
         add_screen.ids.amount.focus = True
     
     def monthly_expense(self):
-
-        month = datetime.now().month
-
-        total = 0
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                date = datetime.strptime(
-                    t["date"],
-                    "%d-%m-%Y %H:%M"
-                )
-
-                if date.month == month:
-                    total += t["amount"]
-
-        return f"₹{total}"
+        return reports.monthly_expense(self.transactions)
     
     def show_message(self, message):
 
@@ -671,183 +610,20 @@ class FinanceManagerApp(App):
         self.root.current = "history"
     
     def expense_summary(self):
-
-        summary = {}
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                cat = t["category"]
-
-                summary[cat] = (
-                    summary.get(cat, 0)
-                    + t["amount"]
-                )
-
-        result = ""
-
-        for cat, amount in summary.items():
-
-            result += (
-                f"{cat}: ₹{amount}\n"
-            )
-
-        return result
+        return reports.expense_summary(self.transactions)
     
 
 
     def category_statistics(self):
-
-        stats = {}
-
-        # Build category statistics
-        for t in self.transactions:
-
-            if t["type"] != "Expense":
-                continue
-
-            category = t["category"]
-
-            if category not in stats:
-
-                stats[category] = {
-                    "total": 0,
-                    "months": set()
-                }
-
-            stats[category]["total"] += t["amount"]
-
-            date_obj = datetime.strptime(
-                t["date"],
-                "%d-%m-%Y %H:%M"
-            )
-
-            month_key = (
-                f"{date_obj.year}-{date_obj.month}"
-            )
-
-            stats[category]["months"].add(
-                month_key
-            )
-
-        # Overall insights
-        expenses = [
-            t for t in self.transactions
-            if t["type"] == "Expense"
-        ]
-
-        incomes = [
-            t for t in self.transactions
-            if t["type"] == "Income"
-        ]
-
-        highest_expense = (
-            max(expenses, key=lambda x: x["amount"])
-            if expenses else None
-        )
-
-        highest_income = (
-            max(incomes, key=lambda x: x["amount"])
-            if incomes else None
-        )
-
-        avg_expense = (
-            sum(t["amount"] for t in expenses)
-            / len(expenses)
-            if expenses else 0
-        )
-
-        avg_income = (
-            sum(t["amount"] for t in incomes)
-            / len(incomes)
-            if incomes else 0
-        )
-
-        # Result text
-        result = (
-            "📊 FINANCE STATISTICS\n\n"
-            f"Total Transactions: "
-            f"{len(self.transactions)}\n\n"
-        )
-
-        if highest_expense:
-
-            result += (
-                "Highest Expense:\n"
-                f"{highest_expense['category']} "
-                f"₹{highest_expense['amount']:.0f}\n\n"
-            )
-
-        if highest_income:
-
-            result += (
-                "Highest Income:\n"
-                f"{highest_income['category']} "
-                f"₹{highest_income['amount']:.0f}\n\n"
-            )
-
-        result += (
-            f"Average Expense: "
-            f"₹{avg_expense:.0f}\n"
-
-            f"Average Income: "
-            f"₹{avg_income:.0f}\n"
-
-            f"Expense Categories: "
-            f"{len(stats)}\n\n"
-
-            "-----------------------------\n\n"
-        )
-
-        # Category-wise statistics
-        for category, data in stats.items():
-
-            total = data["total"]
-
-            months = len(
-                data["months"]
-            )
-
-            avg_monthly = (
-                total / months
-                if months else 0
-            )
-
-            result += (
-                f"{category}\n"
-                f"Total Expense: ₹{total:.0f}\n"
-                f"Months Active: {months}\n"
-                f"Average Monthly Expense: "
-                f"₹{avg_monthly:.0f}\n\n"
-            )
-
-        return result
+        return reports.category_statistics(self.transactions)
     
 
     def backup_data(self):
     
         try:
-    
-            backup_dir = (
-                "/storage/emulated/0/Download/FinanceManager"
-            )
-    
-            os.makedirs(
-                backup_dir,
-                exist_ok=True
-            )
-    
-            source = self.db.db_path
-    
-            destination = os.path.join(
-                backup_dir,
+            backup_service.backup_database(
+                self.db.db_path,
                 self.current_database
-            )
-    
-            shutil.copy2(
-                source,
-                destination
             )
 
             self.log(f"Backup created: {self.current_database}")
@@ -869,51 +645,37 @@ class FinanceManagerApp(App):
 
         try:
     
-            filename = filename.strip()
-    
-            if not filename.endswith(".db"):
-                filename += ".db"
-    
-            source = os.path.join(
-                "/storage/emulated/0/Download/FinanceManager",
-                filename
-            )
-    
-            destination = os.path.join(
-                App.get_running_app().user_data_dir,
-                filename
-            )
-    
-            if not os.path.exists(source):
-    
-                DialogManager.show_message(
-                    "Error",
-                    "Database not found"
+            success, message, db_name = (
+                backup_service.import_database_file(
+                    filename,
+                    App.get_running_app().user_data_dir
                 )
-                return
-    
-            if os.path.exists(destination):
-    
-                DialogManager.show_message(
-                    "Error",
+            )
+
+            if not success:
+                title = "Invalid Database"
+
+                if message in [
+                    "Database not found",
                     "Database already exists"
+                ]:
+                    title = "Error"
+
+                DialogManager.show_message(
+                    title,
+                    message
                 )
                 return
-    
-            shutil.copy2(
-                source,
-                destination
-            )
-    
+
             self.refresh_database_list()
 
-            self.log(f"database imported succesfully")
+            self.log("database imported succesfully")
     
             popup.dismiss()
     
             DialogManager.show_message(
                 "Success",
-                f"{filename} imported"
+                f"{db_name} imported"
             )
     
         except Exception as e:
@@ -922,13 +684,9 @@ class FinanceManagerApp(App):
                 "Error",
                 str(e)
             )
-
+    
     def show_import_popup(self):
 
-        backup_dir = (
-            "/storage/emulated/0/Download/FinanceManager"
-        )
-    
         content = BoxLayout(
             orientation="vertical",
             spacing=10,
@@ -941,14 +699,7 @@ class FinanceManagerApp(App):
             size_hint=(0.8,0.6)
         )
     
-        databases = []
-    
-        if os.path.exists(backup_dir):
-    
-            databases = [
-                f for f in os.listdir(backup_dir)
-                if f.endswith(".db")
-            ]
+        databases = backup_service.list_backup_databases()
     
         if not databases:
     
@@ -960,7 +711,7 @@ class FinanceManagerApp(App):
     
         else:
     
-            for db in sorted(databases):
+            for db in databases:
     
                 btn = Button(
                     text=db,
@@ -1499,17 +1250,11 @@ class FinanceManagerApp(App):
         popup.open()
     
     def create_new_database(self,name,popup):
-        name=name.strip()
-        
-        if not name:
-            DialogManager.show_message("Error","Enter database name")
+        try:
+            db_name = database_service.create_database(name)
+        except Exception as e:
+            DialogManager.show_message("Error", str(e))
             return
-        
-        db_name=f"{name}.db"
-        
-        temp_db=DatabaseManager(db_name)  
-        temp_db.create_database()
-        temp_db.conn.close()
         
         popup.dismiss()
 
@@ -1530,11 +1275,10 @@ class FinanceManagerApp(App):
 
         self.log(f"saving databae: {db_name}")
 
-        settings_path = os.path.join(App.get_running_app().user_data_dir,"settings.json")
-        
-        with open(settings_path, "w") as f:
-                json.dump(
-                    {"database":db_name},f)
+        database_service.save_selected_database(
+            App.get_running_app().user_data_dir,
+            db_name
+        )
                     
         self.db=DatabaseManager(db_name)
         
@@ -1550,16 +1294,14 @@ class FinanceManagerApp(App):
         
     
     def refresh_database_list(self):
-        self.database_data = []
-        databases = [
-           f for f in os.listdir(
-               App.get_running_app().user_data_dir)
-            if f.endswith(".db")
-            ]
-        for db in sorted(databases):
-            self.database_data.append({
+        self.database_data = [
+            {
                 "db_name": db
-            })
+            }
+            for db in database_service.list_databases(
+                App.get_running_app().user_data_dir
+            )
+        ]
             
     def rename_database_popup(self,old_name):
       layout=BoxLayout(
@@ -1591,62 +1333,47 @@ class FinanceManagerApp(App):
       popup.open()
     
     def rename_database(self,old_name,new_name,popup):
-        new_name = (
-            new_name.strip()
-            + ".db"
-        )
-        if new_name == ".db":
-            DialogManager.show_message(
-                "Error",
-                "Enter database name"
-            )
-            return
-
         user_dir = App.get_running_app().user_data_dir
+        is_current_database = self.current_database == old_name
 
-        old_path = os.path.join(user_dir,old_name)
+        try:
+            if is_current_database:
+                self.db.conn.close()
 
-        new_path = os.path.join(user_dir,new_name)
-        
-        if os.path.exists(
-            new_path
-        ):
+            success, message, db_name = (
+                database_service.rename_database_file(
+                    user_dir,
+                    old_name,
+                    new_name,
+                    self.current_database
+                )
+            )
+
+            if not success:
+                if is_current_database:
+                    self.db = DatabaseManager(old_name)
+
+                DialogManager.show_message(
+                    "Error",
+                    message
+                )
+                return
+
+            if is_current_database:
+                self.current_database = db_name
+                self.db = DatabaseManager(db_name)
+
+        except Exception as e:
+            if is_current_database:
+                self.db = DatabaseManager(old_name)
+
             DialogManager.show_message(
                 "Error",
-                "Database already exists"
+                str(e)
             )
             return
 
-        self.log(f"old path = {old_path}")
-        self.log(f"new path= {new_path}")
-        
-        os.rename(
-            old_path,
-            new_path
-        )
-        
-        if self.current_database == old_name:
-            self.db.conn.close()
-            
-            self.current_database = (new_name)
-
-            self.db = DatabaseManager(new_name)
-
-            settings_path = os.path.join(user_dir,"settings.json")
-            with open(
-                settings_path,
-                "w"
-            ) as f:
-                json.dump(
-                    {
-                        "database": new_name
-                    },
-                    f
-                )
-
-        
-        
-        
+        self.log(f"database renamed: {old_name} -> {db_name}")
         self.refresh_database_list()
         popup.dismiss()
     
@@ -1708,21 +1435,21 @@ class FinanceManagerApp(App):
         popup.open()
     
     def delete_database(self,db_name,popup):
-        if db_name == self.current_database:
-
-            DialogManager.show_message(
-                "Error",
-                "Cannot delete active database"
-            )
-
-            return
-        
         try:
-            db_path = os.path.join(
-                App.get_running_app().user_data_dir,db_name
+            success, message = (
+                database_service.delete_database_file(
+                    App.get_running_app().user_data_dir,
+                    db_name,
+                    self.current_database
+                )
             )
-            
-            os.remove(db_path)
+
+            if not success:
+                DialogManager.show_message(
+                    "Error",
+                    message
+                )
+                return
 
             self.refresh_database_list()
             popup.dismiss()
@@ -1731,6 +1458,7 @@ class FinanceManagerApp(App):
                 f"{db_name} deleted"
             )
             self.log(f"database deleted succesfully")
+
         except Exception as e:
           DialogManager.show_message(
                "Error",
