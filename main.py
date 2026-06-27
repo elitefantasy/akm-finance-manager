@@ -294,6 +294,7 @@ class FinanceManagerApp(App):
         add_screen = self.root.get_screen("add")
         add_screen.ids.amount.text=""
         add_screen.ids.note.text=""
+        add_screen.ids.amount.focus = True
         
         
     def refresh_transaction_view(self):
