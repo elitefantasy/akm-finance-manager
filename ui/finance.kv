@@ -622,41 +622,66 @@
 
         Widget:
             size_hint_y: None
-            height: dp(8)
+            height: dp(4)
 
         # Recent Transactions Card
-        BoxLayout:
-            orientation: "vertical"
-            size_hint_y: 1
+		BoxLayout:
+			orientation: "vertical"
+			size_hint_y: 1
+			
 
-            canvas.before:
-                Color:
-                    rgba: .15,.15,.15,1
+			canvas.before:
+				Color:
+					rgba: .15, .15, .15, 1
 
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [15]
+				RoundedRectangle:
+					pos: self.pos
+					size: self.size
+					radius: [15]
 
-            Label:
-                text: "Recent Transactions"
-                size_hint_y: None
-                height: 30
-                bold: True
+			# -------------------------
+			# Header
+			# -------------------------
+			BoxLayout:
+				size_hint_y: None
+				height: dp(52)
+				padding: [dp(14), 0]
 
-            ScrollView:
-                GridLayout:
-                    id: recent_list
-                    cols: 1
-                    spacing: app.metrics.Spacing.SMALL
-                    padding: [0, 0, 0, dp(8)]
-                    size_hint_y: None
-                    height: self.minimum_height
+				Label:
+					text: "Recent Transactions"
+					bold: True
+					font_size: app.metrics.Font.TITLE
+
+					halign: "left"
+					valign: "middle"
+					text_size: self.size
+			
+			Widget:
+				size_hint_y: None
+				height: app.metrics.Spacing.SMALL
+
+			# -------------------------
+			# Transaction List
+			# -------------------------
+			ScrollView:
+				do_scroll_x: False
+				# bar_width: dp(4)
+
+				GridLayout:
+					id: recent_list
+
+					cols: 1
+					spacing: app.metrics.Spacing.SMALL
+
+					padding: [app.metrics.Padding.CARD,0,app.metrics.Padding.CARD,app.metrics.Padding.CARD]
+
+					size_hint_y: None
+					height: self.minimum_height
 
         # Income / Expense Buttons
         BoxLayout:
             size_hint_y: None
-            height: app.metrics.Size.ADD_BUTTON_HEIGHT
+            height: app.metrics.Size.BUTTON_HEIGHT
             spacing: app.metrics.Spacing.NORMAL
 
             Button:
