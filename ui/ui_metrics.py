@@ -49,7 +49,7 @@ class Size:
     ADD_BALANCE_HEIGHT = dp(100 * UI_SCALE)
 
     # Add Screen
-    ADD_RECENT_HEIGHT = dp(340 * UI_SCALE)
+    ADD_RECENT_HEIGHT = dp(240 * UI_SCALE)
 
     ADD_BUTTON_HEIGHT = dp(48 * UI_SCALE)
 

@@ -453,261 +453,277 @@
 
     BoxLayout:
         orientation: "vertical"
-        padding: app.metrics.Padding.SCREEN
-		spacing: app.metrics.Spacing.NORMAL
 
-        Label:
-            text: "ADD TRANSACTION"
-            font_size: 24
-            bold: True
-            size_hint_y: None
-            height: 40
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
 
-        # --------------------
-		# Balance Card
-		# --------------------
+            BoxLayout:
+                orientation: "vertical"
 
-		Card:
+                size_hint_y: None
+                height: self.minimum_height
 
-			size_hint_y: None
+                padding: [app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN + app.metrics.Size.BOTTOM_NAV_HEIGHT]
+                spacing: app.metrics.Spacing.NORMAL
 
-			height: app.metrics.Size.ADD_BALANCE_HEIGHT
+		        Label:
+		            text: "ADD TRANSACTION"
+		            font_size: 24
+		            bold: True
+		            size_hint_y: None
+		            height: 40
 
-			BoxLayout:
+		        # --------------------
+				# Balance Card
+				# --------------------
 
-				orientation: "horizontal"
-
-				spacing: dp(4)
-
-				size_hint_y: None
-
-				height: dp(26)
-
-				Label:
-
-					font_name: "MaterialIcons"
-
-					text: app.icons.BALANCE
-
-					font_size: "18sp"
-
-					size_hint_x: None
-
-					width: dp(28)
-
-				Label:
-                    text: "Balance"
-                    bold: True
-                    font_size: app.metrics.Font.CARD_TITLE
-                    halign: "left"
-                    valign: "middle"
-                    text_size: self.size
-
-			Label:
-                text: (f"-₹{abs(app.balance):,.0f}" if app.balance < 0 else f"₹{app.balance:,.0f}")
-
-                font_size: app.metrics.Font.CARD_VALUE
-                bold: True
-
-                halign: "left"
-                valign: "middle"
-                text_size: self.size
-
-			BoxLayout:
-
-				size_hint_y: None
-
-				height: dp(20)
-
-				spacing: dp(16)
-
-				Label:
-
-					markup: True
-
-					text:
-						"[color=00ff00]Income[/color]"
-
-				Label:
-
-					text:
-						f"₹{app.income:,.0f}"
-
-					color: 0,1,0,1
-
-				Label:
-
-					markup: True
-
-					text:
-						"[color=ff5555]Expense[/color]"
-
-				Label:
-
-					text:
-						f"₹{app.expense:,.0f}"
-
-					color: 1,.35,.35,1
-        
-
-        TextInput:
-            id: amount
-            hint_text: "₹ Amount"
-            multiline: False
-            input_filter: "float"
-            font_size: app.metrics.Font.NORMAL
-            size_hint_y: None
-            height: app.metrics.Size.TEXT_INPUT_HEIGHT
-            halign: "center"
-
-        Spinner:
-            id: category
-            text: "Food"
-            values: app.categories
-            size_hint_y: None
-            height: app.metrics.Size.TEXT_INPUT_HEIGHT
-            font_size: app.metrics.Font.NORMAL
-
-        TextInput:
-            id: note
-            hint_text: "Note (optional)"
-            size_hint_y: None
-            height: app.metrics.Size.TEXT_INPUT_HEIGHT
-		
-		# --------------------
-		# Recurring Transaction
-		# --------------------
-
-		BoxLayout:
-			orientation: "horizontal"
-			size_hint_y: None
-			height: app.metrics.Size.TEXT_INPUT_HEIGHT
-			spacing: app.metrics.Spacing.NORMAL
-
-			CheckBox:
-				size_hint_x: None
-				width: dp(40)
-				active: app.recurring_enabled
-
-				on_active:
-					app.recurring_enabled = self.active
-
-			Label:
-				text: "Repeat every month"
-				halign: "left"
-				valign: "middle"
-				text_size: self.size
-
-		TextInput:
-			id: recurring_day
-
-			hint_text: "Day of month (1-31)"
-
-			multiline: False
-
-			input_filter: "int"
-
-			text: app.recurring_day
-
-			on_text:
-				app.recurring_day = self.text
-
-			opacity: 1 if app.recurring_enabled else 0
-
-			disabled: not app.recurring_enabled
-
-			size_hint_y: None
-
-			height: (app.metrics.Size.TEXT_INPUT_HEIGHT if app.recurring_enabled else 0 )
-
-        Widget:
-            size_hint_y: None
-            height: dp(4)
-
-        # Recent Transactions Card
-		BoxLayout:
-			orientation: "vertical"
-			size_hint_y: 1
-			
-
-			canvas.before:
-				Color:
-					rgba: .15, .15, .15, 1
-
-				RoundedRectangle:
-					pos: self.pos
-					size: self.size
-					radius: [15]
-
-			# -------------------------
-			# Header
-			# -------------------------
-			BoxLayout:
-				size_hint_y: None
-				height: dp(52)
-				padding: [dp(14), 0]
-
-				Label:
-					text: "Recent Transactions"
-					bold: True
-					font_size: app.metrics.Font.TITLE
-
-					halign: "left"
-					valign: "middle"
-					text_size: self.size
-			
-			Widget:
-				size_hint_y: None
-				height: app.metrics.Spacing.SMALL
-
-			# -------------------------
-			# Transaction List
-			# -------------------------
-			ScrollView:
-				do_scroll_x: False
-				# bar_width: dp(4)
-
-				GridLayout:
-					id: recent_list
-
-					cols: 1
-					spacing: app.metrics.Spacing.SMALL
-
-					padding: [app.metrics.Padding.CARD,0,app.metrics.Padding.CARD,app.metrics.Padding.CARD]
+				Card:
 
 					size_hint_y: None
+
+					height: app.metrics.Size.ADD_BALANCE_HEIGHT
+
+					BoxLayout:
+
+						orientation: "horizontal"
+
+						spacing: dp(4)
+
+						size_hint_y: None
+
+						height: dp(26)
+
+						Label:
+
+							font_name: "MaterialIcons"
+
+							text: app.icons.BALANCE
+
+							font_size: "18sp"
+
+							size_hint_x: None
+
+							width: dp(28)
+
+						Label:
+		                    text: "Balance"
+		                    bold: True
+		                    font_size: app.metrics.Font.CARD_TITLE
+		                    halign: "left"
+		                    valign: "middle"
+		                    text_size: self.size
+
+					Label:
+		                text: (f"-₹{abs(app.balance):,.0f}" if app.balance < 0 else f"₹{app.balance:,.0f}")
+
+		                font_size: app.metrics.Font.CARD_VALUE
+		                bold: True
+
+		                halign: "left"
+		                valign: "middle"
+		                text_size: self.size
+
+					BoxLayout:
+
+						size_hint_y: None
+
+						height: dp(20)
+
+						spacing: dp(16)
+
+						Label:
+
+							markup: True
+
+							text:
+								"[color=00ff00]Income[/color]"
+
+						Label:
+
+							text:
+								f"₹{app.income:,.0f}"
+
+							color: 0,1,0,1
+
+						Label:
+
+							markup: True
+
+							text:
+								"[color=ff5555]Expense[/color]"
+
+						Label:
+
+							text:
+								f"₹{app.expense:,.0f}"
+
+							color: 1,.35,.35,1
+		        
+
+		        TextInput:
+		            id: amount
+		            hint_text: "₹ Amount"
+		            multiline: False
+		            input_filter: "float"
+		            font_size: app.metrics.Font.NORMAL
+		            size_hint_y: None
+		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+		            halign: "center"
+
+		        Spinner:
+		            id: category
+		            text: "Food"
+		            values: app.categories
+		            size_hint_y: None
+		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+		            font_size: app.metrics.Font.NORMAL
+
+		        TextInput:
+		            id: note
+		            hint_text: "Note (optional)"
+		            size_hint_y: None
+		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+				
+				# --------------------
+				# Recurring Transaction
+				# --------------------
+
+				BoxLayout:
+					orientation: "horizontal"
+					size_hint_y: None
+					height: app.metrics.Size.TEXT_INPUT_HEIGHT
+					spacing: app.metrics.Spacing.NORMAL
+
+					CheckBox:
+						size_hint_x: None
+						width: dp(40)
+						active: app.recurring_enabled
+
+						on_active:
+							app.recurring_enabled = self.active
+
+					Label:
+						text: "Repeat every month"
+						halign: "left"
+						valign: "middle"
+						text_size: self.size
+
+				TextInput:
+					id: recurring_day
+
+					hint_text: "Day of month (1-31)"
+
+					multiline: False
+
+					input_filter: "int"
+
+					text: app.recurring_day
+
+					on_text:
+						app.recurring_day = self.text
+
+					opacity: 1 if app.recurring_enabled else 0
+
+					disabled: not app.recurring_enabled
+
+					size_hint_y: None
+
+					height: (app.metrics.Size.TEXT_INPUT_HEIGHT if app.recurring_enabled else 0 )
+
+		        # Widget:
+		        #     size_hint_y: None
+		        #     height: dp(4)
+
+		        # Recent Transactions Card
+				BoxLayout:
+					orientation: "vertical"
+					size_hint_y: None
 					height: self.minimum_height
+					
 
-        # Income / Expense Buttons
-        BoxLayout:
-            size_hint_y: None
-            height: app.metrics.Size.BUTTON_HEIGHT
-            spacing: app.metrics.Spacing.NORMAL
+					canvas.before:
+						Color:
+							rgba: .15, .15, .15, 1
 
-            Button:
-                text: "+ Income"
-				background_normal: ""
-                background_color: app.metrics.Color.ADD_BUTTON_INCOME
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+							radius: [15]
 
-                on_press:
-                    app.add_transaction(
-                    amount.text,
-                    category.text,
-                    note.text,
-                    "Income")
+					# -------------------------
+					# Header
+					# -------------------------
+					BoxLayout:
+						size_hint_y: None
+						height: dp(52)
+						padding: [dp(14), 0]
 
-            Button:
-                text: "- Expense"
-                background_normal: ""
+						Label:
+							text: "Recent Transactions"
+							bold: True
+							font_size: app.metrics.Font.TITLE
 
-				background_color: app.metrics.Color.ADD_BUTTON_EXPENSE
+							halign: "left"
+							valign: "middle"
+							text_size: self.size
+					
+					Widget:
+						size_hint_y: None
+						height: app.metrics.Spacing.SMALL
 
-                on_press:
-                    app.add_transaction(
-                    amount.text,
-                    category.text,
-                    note.text,
-                    "Expense")
+					# -------------------------
+					# Recent Transaction List
+					# -------------------------
+					GridLayout:
+					    id: recent_list
+
+					    cols: 1
+
+					    spacing: app.metrics.Spacing.SMALL
+
+					    padding:
+					        [
+					        app.metrics.Padding.CARD,
+					        0,
+					        app.metrics.Padding.CARD,
+					        app.metrics.Padding.CARD
+					        ]
+
+					    size_hint_y: None
+
+					    height: self.minimum_height
+
+		        # Income / Expense Buttons
+		        BoxLayout:
+		            size_hint_y: None
+		            height: app.metrics.Size.BUTTON_HEIGHT
+		            spacing: app.metrics.Spacing.NORMAL
+
+		            Button:
+		                text: "+ Income"
+						background_normal: ""
+		                background_color: app.metrics.Color.ADD_BUTTON_INCOME
+
+		                on_press:
+		                    app.add_transaction(
+		                    amount.text,
+		                    category.text,
+		                    note.text,
+		                    "Income")
+
+		            Button:
+		                text: "- Expense"
+		                background_normal: ""
+
+						background_color: app.metrics.Color.ADD_BUTTON_EXPENSE
+
+		                on_press:
+		                    app.add_transaction(
+		                    amount.text,
+		                    category.text,
+		                    note.text,
+		                    "Expense")
 
 
         BottomNav:
