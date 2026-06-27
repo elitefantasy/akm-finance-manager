@@ -59,14 +59,29 @@ class TransactionRow(BoxLayout):
 
     transaction_id = NumericProperty(0)
 
-class DashboardTransactionRow(BoxLayout):
+class DashboardTransactionRow(ButtonBehavior, BoxLayout):
 
     category = StringProperty("")
     amount = StringProperty("")
     note = StringProperty("")
     date = StringProperty("")
 
-    amount_color = ListProperty([1,1,1,1])
+    amount_color = ListProperty([1, 1, 1, 1])
+
+    transaction = DictProperty({})
+
+    pressed = BooleanProperty(False)
+
+    on_transaction = None
+
+    def on_press(self):
+        self.pressed = True
+
+    def on_release(self):
+        self.pressed = False
+
+        if callable(self.on_transaction):
+            self.on_transaction(self.transaction)
 
 class AddRecentTransactionRow(ButtonBehavior, BoxLayout):
 

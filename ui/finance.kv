@@ -322,12 +322,12 @@
 
     canvas.before:
         Color:
-            rgba: .12,.12,.12,1
+            rgba: (.18, .18, .18, 1) if root.pressed else (.12, .12, .12, 1)
 
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [10]
+            radius: [12]
 
     BoxLayout:
         size_hint_y: None

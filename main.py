@@ -387,21 +387,20 @@ class FinanceManagerApp(App):
 
                 recent_box.add_widget(
 
-                    DashboardTransactionRow(
-
+                    row = DashboardTransactionRow(
                         category=transaction["category"],
-
                         amount=TransactionFormatter.amount(transaction),
-
                         note=TransactionFormatter.note(transaction),
-
                         date=TransactionFormatter.date(transaction),
-
-                        amount_color=TransactionFormatter.amount_color(transaction)
-
+                        amount_color=TransactionFormatter.amount_color(transaction),
+                        transaction=transaction,
                     )
 
-                )
+                  )
+                
+                row.on_transaction = self.open_dashboard_transaction
+
+                recent_box.add_widget(row)
                 
               
                             
@@ -439,7 +438,7 @@ class FinanceManagerApp(App):
                     transaction=t,
                 )
 
-                row.use_callback = self.use_recent_transaction
+                row.on_transaction = self.use_recent_transaction
 
                 recent_list.add_widget(row)
     
@@ -488,6 +487,13 @@ class FinanceManagerApp(App):
         add_screen.ids.amount.text = str(transaction["amount"])
 
         add_screen.ids.amount.focus = True
+    
+    def open_dashboard_transaction(self, transaction):
+        """
+        Opens the Edit Transaction screen from a dashboard card.
+        """
+
+        self.open_edit(transaction["id"])
     
     def monthly_expense(self):
         return reports.monthly_expense(self.transactions)
