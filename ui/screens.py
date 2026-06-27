@@ -59,31 +59,7 @@ class TransactionRow(BoxLayout):
 
     transaction_id = NumericProperty(0)
 
-class DashboardTransactionRow(ButtonBehavior, BoxLayout):
-
-    category = StringProperty("")
-    amount = StringProperty("")
-    note = StringProperty("")
-    date = StringProperty("")
-
-    amount_color = ListProperty([1, 1, 1, 1])
-
-    transaction = DictProperty({})
-
-    pressed = BooleanProperty(False)
-
-    on_transaction = None
-
-    def on_press(self):
-        self.pressed = True
-
-    def on_release(self):
-        self.pressed = False
-
-        if callable(self.on_transaction):
-            self.on_transaction(self.transaction)
-
-class AddRecentTransactionRow(ButtonBehavior, BoxLayout):
+class ClickableTransactionRow(ButtonBehavior, BoxLayout):
 
     # ---------- Display ----------
     category = StringProperty("")
@@ -99,8 +75,8 @@ class AddRecentTransactionRow(ButtonBehavior, BoxLayout):
     # ---------- UI ----------
     pressed = BooleanProperty(False)
 
-    # Callback supplied by FinanceManagerApp
-    use_callback = None
+    # Assigned by FinanceManagerApp
+    transaction_callback = None
 
     def on_press(self):
         self.pressed = True
@@ -108,8 +84,14 @@ class AddRecentTransactionRow(ButtonBehavior, BoxLayout):
     def on_release(self):
         self.pressed = False
 
-        if callable(self.use_callback):
-            self.use_callback(self.transaction)
+        if callable(self.transaction_callback):
+            self.transaction_callback(self.transaction)
+
+class DashboardTransactionRow(ClickableTransactionRow):
+    pass
+
+class AddRecentTransactionRow(ClickableTransactionRow):
+    pass
 
 
 class RecurringRow(BoxLayout):

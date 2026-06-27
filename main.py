@@ -8,7 +8,12 @@ from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ListProperty, StringProperty, NumericProperty
+from kivy.properties import (
+    ListProperty,
+    StringProperty,
+    NumericProperty,
+    BooleanProperty,
+)
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
@@ -69,6 +74,8 @@ class FinanceManagerApp(App):
     balance = NumericProperty(0)
     income = NumericProperty(0)
     expense = NumericProperty(0)
+    recurring_enabled = BooleanProperty(False)
+    recurring_day = StringProperty("")
     total_income = NumericProperty(0)
     total_expense = NumericProperty(0)
 
@@ -289,11 +296,29 @@ class FinanceManagerApp(App):
         
         self.transactions.append(transaction)
         
+        if (
+            self.recurring_enabled
+            and ttype == "Expense"
+        ):
+            self.add_recurring(
+                amount,
+                category,
+                self.recurring_day,
+                show_message=False
+            )
+        
         self.update_dashboard()
         
         add_screen = self.root.get_screen("add")
-        add_screen.ids.amount.text=""
-        add_screen.ids.note.text=""
+        
+        add_screen.ids.amount.text = ""
+        add_screen.ids.note.text = ""
+
+        self.recurring_enabled = False
+        self.recurring_day = ""
+
+        add_screen.ids.recurring_day.text = ""
+
         add_screen.ids.amount.focus = True
         
         
@@ -385,20 +410,17 @@ class FinanceManagerApp(App):
             
             for transaction in self.transactions[-5:][::-1]:
 
-                recent_box.add_widget(
+                row = DashboardTransactionRow(
+                    category=transaction["category"],
+                    amount=TransactionFormatter.amount(transaction),
+                    note=TransactionFormatter.note(transaction),
+                    date=TransactionFormatter.date(transaction),
+                    amount_color=TransactionFormatter.amount_color(transaction),
+                    transaction=transaction,
+                )
 
-                    row = DashboardTransactionRow(
-                        category=transaction["category"],
-                        amount=TransactionFormatter.amount(transaction),
-                        note=TransactionFormatter.note(transaction),
-                        date=TransactionFormatter.date(transaction),
-                        amount_color=TransactionFormatter.amount_color(transaction),
-                        transaction=transaction,
-                    )
-
-                  )
-                
-                row.on_transaction = self.open_dashboard_transaction
+            
+                row.transaction_callback = self.open_dashboard_transaction
 
                 recent_box.add_widget(row)
                 
@@ -438,7 +460,7 @@ class FinanceManagerApp(App):
                     transaction=t,
                 )
 
-                row.on_transaction = self.use_recent_transaction
+                row.transaction_callback = self.use_recent_transaction
 
                 recent_list.add_widget(row)
     
@@ -844,7 +866,13 @@ class FinanceManagerApp(App):
             logger.exception("Date popup error")
             popup.dismiss()
     
-    def add_recurring(self, amount, category, day):
+    def add_recurring(
+        self,
+        amount,
+        category,
+        day,
+        show_message=True
+    ):
 
         try:
 
@@ -877,10 +905,11 @@ class FinanceManagerApp(App):
        
         self.refresh_recurring_view()
         
-        DialogManager.show_message(
-            "Sucess",
-            "Recurring Expense Added"
-        )
+        if show_message:
+            DialogManager.show_message(
+                "Success",
+                "Recurring Expense Added"
+            )
         
     
     
@@ -1453,10 +1482,16 @@ class FinanceManagerApp(App):
 
         data = Button(text="Data Management")
         
+        recurring = Button(
+            text="Recurring Manager"
+        )
+        
         statistics=Button(
           text="statistics")
 
         layout.add_widget(categories)
+        
+        layout.add_widget(recurring)
 
         layout.add_widget(data)
         
@@ -1471,6 +1506,14 @@ class FinanceManagerApp(App):
             on_press=lambda x:
             self.open_screen(
                 "categories",
+                popup
+            )
+        )
+        
+        recurring.bind(
+            on_press=lambda x:
+            self.open_screen(
+                "manage_recurring",
                 popup
             )
         )

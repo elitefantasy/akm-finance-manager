@@ -309,10 +309,10 @@
             on_press:
                 app.delete_transaction(root.transaction_id)
 
-<DashboardTransactionRow@BoxLayout>
+<DashboardTransactionRow>
 
     size_hint_y: None
-    height: dp(78)
+    height: app.metrics.Size.RECENT_ITEM_HEIGHT
 
     orientation: "vertical"
 
@@ -376,7 +376,7 @@
 <AddRecentTransactionRow>:
 
     size_hint_y: None
-    height: dp(68)
+    height: app.metrics.Size.RECENT_ITEM_HEIGHT
 
     orientation: "vertical"
 
@@ -423,17 +423,29 @@
 
             text_size: self.size
 
-    Label:
+		Label:
+			text: root.note
 
-        text: root.note + "   •   " + root.date
+			size_hint_y: None
+			height: dp(18)
 
-        color: .7,.7,.7,1
+			color: .75,.75,.75,1
 
-        halign: "left"
+			halign: "left"
+			valign: "middle"
+			text_size: self.size
 
-        valign: "middle"
+		Label:
+			text: root.date
 
-        text_size: self.size
+			size_hint_y: None
+			height: dp(16)
+
+			color: .55,.55,.55,1
+
+			halign: "left"
+			valign: "middle"
+			text_size: self.size
 
             
 
@@ -561,6 +573,52 @@
             hint_text: "Note (optional)"
             size_hint_y: None
             height: app.metrics.Size.TEXT_INPUT_HEIGHT
+		
+		# --------------------
+		# Recurring Transaction
+		# --------------------
+
+		BoxLayout:
+			orientation: "horizontal"
+			size_hint_y: None
+			height: app.metrics.Size.TEXT_INPUT_HEIGHT
+			spacing: app.metrics.Spacing.NORMAL
+
+			CheckBox:
+				size_hint_x: None
+				width: dp(40)
+				active: app.recurring_enabled
+
+				on_active:
+					app.recurring_enabled = self.active
+
+			Label:
+				text: "Repeat every month"
+				halign: "left"
+				valign: "middle"
+				text_size: self.size
+
+		TextInput:
+			id: recurring_day
+
+			hint_text: "Day of month (1-31)"
+
+			multiline: False
+
+			input_filter: "int"
+
+			text: app.recurring_day
+
+			on_text:
+				app.recurring_day = self.text
+
+			opacity: 1 if app.recurring_enabled else 0
+
+			disabled: not app.recurring_enabled
+
+			size_hint_y: None
+
+			height: (app.metrics.Size.TEXT_INPUT_HEIGHT if app.recurring_enabled else 0 )
 
         Widget:
             size_hint_y: None
