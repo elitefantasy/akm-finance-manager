@@ -24,21 +24,44 @@
                 spacing: 15
                 padding: 15
     
-                Label:
-                    text: "Finance Manager"
-                    font_size: 32
-                    bold: True
-                    size_hint_y: None
-                    height: 60
+                BoxLayout:
+					orientation: "horizontal"
+					spacing: 8
+					size_hint_y: None
+					height: 40
+
+					Label:
+						font_name: "MaterialIcons"
+						text: app.icons.BALANCE
+						font_size: "28sp"
+						size_hint_x: None
+						width: 40
+
+					Label:
+						text: "Finance Manager"
+						bold: True
     
                 # BALANCE CARD
                 Card:
                     size_hint_y: None
                     height: app.metrics.Size.BALANCE_CARD_HEIGHT
       
-                    Label:
-                        text: "💰 Balance"
-                        font_size: app.metrics.Font.CARD_TITLE
+                    BoxLayout:
+						orientation: "horizontal"
+						spacing: dp(8)
+						size_hint_y: None
+						height: self.minimum_height
+
+						Label:
+							font_name: "MaterialIcons"
+							text: app.icons.BALANCE
+							font_size: app.metrics.Font.CARD_TITLE
+							size_hint_x: None
+							width: dp(30)
+
+						Label:
+							text: "Balance"
+							font_size: app.metrics.Font.CARD_TITLE
       
                     Label:
                         text: f"-₹{abs(app.balance):,.0f}" if app.balance < 0 else f"₹{app.balance:,.0f}"
@@ -62,8 +85,22 @@
                                     size:self.size
                                     radius:[15]
     
-                        Label:
-                            text:"📈 Income"
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(8)
+							size_hint_y: None
+							height: self.minimum_height
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.INCOME
+								font_size: app.metrics.Font.CARD_TITLE
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "Income"
+								font_size: app.metrics.Font.CARD_TITLE
                         
                         Label:
                             text: f"₹{app.income:,.0f}"
@@ -80,8 +117,22 @@
                                 size:self.size
                                 radius:[15]
                 
-                        Label:
-                            text:"📉 Expense"
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(8)
+							size_hint_y: None
+							height: self.minimum_height
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.EXPENSE
+								font_size: app.metrics.Font.CARD_TITLE
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "Expense"
+								font_size: app.metrics.Font.CARD_TITLE
                 
                         Label:
                             text: f"₹{app.expense:,.0f}"
@@ -95,17 +146,43 @@
                     spacing: 10
                     
                     Card:
-                        Label:
-                            text:"🏆 Top Category"
-							font_size: app.metrics.Font.CARD_TITLE
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(8)
+							size_hint_y: None
+							height: self.minimum_height
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.CATEGORY
+								font_size: app.metrics.Font.CARD_TITLE
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "Top Category"
+								font_size: app.metrics.Font.CARD_TITLE
                 
                         Label:
                             text: app.top_category_text
                 
                     Card:
-                        Label:
-                            text:"📅 This Month"
-							font_size: app.metrics.Font.CARD_TITLE
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(8)
+							size_hint_y: None
+							height: self.minimum_height
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.CALENDAR
+								font_size: app.metrics.Font.CARD_TITLE
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "This Month"
+								font_size: app.metrics.Font.CARD_TITLE
                         Label:
                             text: app.monthly_expense_text
 				
@@ -776,38 +853,44 @@
         on_press:
             app.delete_category(root.category_id)
 
+
 <BottomNav@BoxLayout>
 
     size_hint_y: None
     height: app.metrics.Size.BOTTOM_NAV_HEIGHT
 
     Button:
-        text: "Home"
-		font_size: app.metrics.Font.NAVIGATION
-        background_color:(0.2,0.5,1,1) if app.current_screen in ["dashboard","statistic","datamanagement","manage_transactions","manage_recurring","categories"] else (0.3,0.3,0.3,1)
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.HOME}[/font]\nHome"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (0.2,0.5,1,1) if app.current_screen in ["dashboard","statistics","datamanagement","manage_transactions","manage_recurring","categories"] else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("dashboard")
 
     Button:
-        text: "Add"
-		font_size: app.metrics.Font.NAVIGATION
-        background_color:(0.2,0.5,1,1) if app.current_screen == "add" else (0.3,0.3,0.3,1)
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.ADD}[/font]\nAdd"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (0.2,0.5,1,1) if app.current_screen == "add" else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("add")
 
     Button:
-        text: "History"
-		font_size: app.metrics.Font.NAVIGATION
-        background_color:(0.2,0.5,1,1) if app.current_screen == "history" else (0.3,0.3,0.3,1)
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.HISTORY}[/font]\nHistory"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (0.2,0.5,1,1) if app.current_screen == "history" else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("history")
 
     Button:
-        text: "Recurring"
-		font_size: app.metrics.Font.NAVIGATION
-        background_color:(0.2,0.5,1,1) if app.current_screen == "recurring" else (0.3,0.3,0.3,1)
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.REPEAT}[/font]\nRepeat"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (0.2,0.5,1,1) if app.current_screen == "recurring" else (0.3,0.3,0.3,1)
         on_press: app.go_to_screen("recurring")
 
     Button:
-        text: "More"
-		font_size: app.metrics.Font.NAVIGATION
-        background_color:(0.3,0.3,0.3,1)
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.MORE}[/font]\nMore"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (0.3,0.3,0.3,1)
         on_press: app.more_menu()
 

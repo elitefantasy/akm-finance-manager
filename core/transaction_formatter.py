@@ -1,7 +1,23 @@
 from datetime import datetime
+from core.icons import Icons
 
+CATEGORY_ICONS = {
+    "Food": Icons.FOOD,
+    "Travel": Icons.TRAVEL,
+    "Shopping": Icons.SHOPPING,
+    "Medical": Icons.MEDICAL,
+    "Education": Icons.EDUCATION,
+    "Other": Icons.OTHER,
+}
 
 class TransactionFormatter:
+
+    @staticmethod
+    def category_icon(transaction):
+        return CATEGORY_ICONS.get(
+            transaction["category"],
+            Icons.OTHER
+        )
 
     @staticmethod
     def amount(transaction):

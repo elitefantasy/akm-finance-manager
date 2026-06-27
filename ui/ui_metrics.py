@@ -21,7 +21,7 @@ class Font:
     CARD_TITLE = sp(18 * UI_SCALE)
     CARD_VALUE = sp(30 * UI_SCALE)
 
-    NAVIGATION = sp(18 * UI_SCALE)
+    NAVIGATION = sp(16 * UI_SCALE)
 
 
 # --------------------------------------------------
@@ -43,7 +43,7 @@ class Size:
     RECENT_ITEM_HEIGHT = dp(65 * UI_SCALE)
 
     # Navigation
-    BOTTOM_NAV_HEIGHT = dp(72 * UI_SCALE)
+    BOTTOM_NAV_HEIGHT = dp(80 * UI_SCALE)
 
 
 # --------------------------------------------------
@@ -75,3 +75,29 @@ class Border:
 
 class Radius:
     CARD = dp(16 * UI_SCALE)
+
+
+# --------------------------------------------------
+# Colors
+# --------------------------------------------------
+
+class Color:
+    # Navigation
+    NAV_ACTIVE = (0.20, 0.50, 1.00, 1)
+    NAV_INACTIVE = (0.30, 0.30, 0.30, 1)
+
+    # Cards
+    CARD = (0.15, 0.15, 0.15, 1)
+
+    # Text
+    TEXT_PRIMARY = (1, 1, 1, 1)
+    TEXT_SECONDARY = (0.70, 0.70, 0.70, 1)
+
+    # Financial
+    INCOME = (0.00, 1.00, 0.00, 1)
+    EXPENSE = (1.00, 0.30, 0.30, 1)
+
+    # Buttons
+    PRIMARY = (0.20, 0.50, 1.00, 1)
+    SUCCESS = (0.00, 0.60, 0.00, 1)
+    DANGER = (0.70, 0.00, 0.00, 1)

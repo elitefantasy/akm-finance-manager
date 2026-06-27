@@ -30,6 +30,7 @@ from core.database import DatabaseManager
 from core.dialogs import DialogManager
 from core.logger import get_logger
 from core.utils import project_path
+from core.icons import Icons
 from ui.screens import *
 from ui.ui_metrics import (
     Font,
@@ -37,18 +38,33 @@ from ui.ui_metrics import (
     Spacing,
     Padding,
     Radius,
+    Color,
 )
+
+from kivy.core.text import LabelBase
+
+
 
 
 logger = get_logger(__name__)
 BACKUP_DIR = get_backup_dir()
 
+LabelBase.register(
+    name="MaterialIcons",
+    fn_regular=project_path(
+        "assets",
+        "fonts",
+        "MaterialIcons-Regular.ttf"
+    )
+)
 
 Builder.load_file(project_path("ui", "finance.kv"))
 
 class FinanceManagerApp(App):
     
     from ui import ui_metrics as metrics
+    
+    icons = Icons
 
     balance = NumericProperty(0)
     income = NumericProperty(0)
@@ -371,9 +387,9 @@ class FinanceManagerApp(App):
                 row = BoxLayout(
                     orientation="vertical",
                     size_hint_y=None,
-                    height=120,
-                    spacing=6,
-                    padding=[10, 8]
+                    height=95,
+                    spacing=4,
+                    padding=[12, 10]
                 
                 )
 
@@ -387,13 +403,23 @@ class FinanceManagerApp(App):
                     size_hint_y=None,
                     height=28
                 )
+                
+                icon = Label(
+                    font_name="MaterialIcons",
+                    text=TransactionFormatter.category_icon(t),
+                    font_size=24,
+                    size_hint=(None, None),
+                    width=40,
+                    height=40,
+                    color=(0.9, 0.9, 0.9, 1)
+                )
 
                 category_label = Label(
                     text=t["category"],
                     bold=True,
                     font_size=Font.NORMAL,
                     size_hint_y=None,
-                    height=28,
+                    height=34,
                     halign="left",
                     valign="middle"
                 )
@@ -422,7 +448,8 @@ class FinanceManagerApp(App):
                     size=lambda instance, value:
                     setattr(instance, "text_size", value)
                 )
-
+                
+                top_row.add_widget(icon)
                 top_row.add_widget(category_label)
                 top_row.add_widget(amount_label)
 
@@ -432,33 +459,31 @@ class FinanceManagerApp(App):
                 # Note
                 # --------------------------
 
-                note = t.get("note", "").strip()
+                note = TransactionFormatter.note(t)
 
-                if note:
+                note_label = Label(
+                    text=note,
+                    font_size=Font.SMALL,
+                    size_hint_y=None,
+                    height=24,
+                    color=(0.75, 0.75, 0.75, 1),
+                    halign="left",
+                    valign="middle"
+                )
 
-                    note_label = Label(
-                        text=note,
-                        font_size=Font.SMALL,
-                        size_hint_y=None,
-                        height=24,
-                        color=(0.75, 0.75, 0.75, 1),
-                        halign="left",
-                        valign="middle"
-                    )
+                note_label.bind(
+                    size=lambda instance, value:
+                    setattr(instance, "text_size", value)
+                )
 
-                    note_label.bind(
-                        size=lambda instance, value:
-                        setattr(instance, "text_size", value)
-                    )
-
-                    row.add_widget(note_label)
+                row.add_widget(note_label)
 
                 # --------------------------
                 # Date
                 # --------------------------
 
                 date_label = Label(
-                    text=t["date"].split()[0],
+                    text=TransactionFormatter.date(t),
                     font_size=Font.SMALL,
                     size_hint_y=None,
                     height = Font.SMALL * 2,
