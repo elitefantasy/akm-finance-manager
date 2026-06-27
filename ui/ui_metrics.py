@@ -44,6 +44,13 @@ class Size:
 
     # Navigation
     BOTTOM_NAV_HEIGHT = dp(80 * UI_SCALE)
+    
+    # Add Screen
+    ADD_BALANCE_HEIGHT = dp(100 * UI_SCALE)
+
+    ADD_RECENT_HEIGHT = dp(280 * UI_SCALE)
+
+    ADD_BUTTON_HEIGHT = dp(48 * UI_SCALE)
 
 
 # --------------------------------------------------
@@ -88,6 +95,13 @@ class Color:
 
     # Cards
     CARD = (0.15, 0.15, 0.15, 1)
+    ADD_INPUT = (.12, .12, .12, 1)
+
+    ADD_CARD = (.15, .15, .15, 1)
+
+    ADD_BUTTON_INCOME = (0.00, 0.55, 0.00, 1)
+
+    ADD_BUTTON_EXPENSE = (0.70, 0.00, 0.00, 1)
 
     # Text
     TEXT_PRIMARY = (1, 1, 1, 1)
@@ -101,3 +115,5 @@ class Color:
     PRIMARY = (0.20, 0.50, 1.00, 1)
     SUCCESS = (0.00, 0.60, 0.00, 1)
     DANGER = (0.70, 0.00, 0.00, 1)
+    
+   

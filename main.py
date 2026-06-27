@@ -429,44 +429,18 @@ class FinanceManagerApp(App):
     
             for t in reversed(self.transactions[-8:]):
     
-                sign = "+"
-                bg_color = (0.2,0.2,0.2,1) #green
-                text_color = (1,0.3,0.3,1)
-    
-                if t["type"] == "Expense":
-                    sign = "-"
-                    text_color = (1,0.3,0.3,1) # red
-    
-                btn = Button(
-                    text=(
-                        f"{t['date'].split()[0]}\n"
-                        f"{t['category']}    "
-                        f"{sign}₹{t['amount']:.0f}"
-                    ),
-                    size_hint_y=None,
-                    height=Size.RECENT_ITEM_HEIGHT,
-                    background_normal = "",
-                    background_color=bg_color,
-                    color=text_color,
-                    font_size=Font.LARGE,
-                    halign="left",
-                    valign="middle"
-                )
-    
-                btn.bind(
-                    size=lambda instance,value:
-                    setattr(instance, "text_size", value)
+                row = AddRecentTransactionRow(
+                    category=t["category"],
+                    amount=TransactionFormatter.amount(t),
+                    note=TransactionFormatter.note(t),
+                    date=TransactionFormatter.date(t),
+                    amount_color=TransactionFormatter.amount_color(t),
+                    transaction=t,
                 )
 
-                btn.bind(
-                    on_press=lambda instance,
-                    category=t["category"],
-                    note=t.get("note",""),
-                    amount=t["amount"]:
-                    self.use_recent_transaction(category,note,amount)
-                )
-    
-                recent_list.add_widget(btn) #
+                row.use_callback = self.use_recent_transaction
+
+                recent_list.add_widget(row)
     
         except Exception:
             logger.exception("Recent List Error")
@@ -502,15 +476,16 @@ class FinanceManagerApp(App):
 
         return result
 
-    def use_recent_transaction(self,category,note,amount):
-    
+    def use_recent_transaction(self, transaction):
+
         add_screen = self.root.get_screen("add")
-    
-        add_screen.ids.category.text = category
-    
-        add_screen.ids.note.text = note
-        add_screen.ids.amount.text = str(amount)
-    
+
+        add_screen.ids.category.text = transaction["category"]
+
+        add_screen.ids.note.text = transaction.get("note", "")
+
+        add_screen.ids.amount.text = str(transaction["amount"])
+
         add_screen.ids.amount.focus = True
     
     def monthly_expense(self):

@@ -1,11 +1,14 @@
 from kivy.uix.screenmanager import Screen
 
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.behaviors import ButtonBehavior
 
 from kivy.properties import (
     StringProperty,
     NumericProperty,
-    ListProperty
+    ListProperty,
+    BooleanProperty,
+    DictProperty,
 )
 
 
@@ -64,6 +67,35 @@ class DashboardTransactionRow(BoxLayout):
     date = StringProperty("")
 
     amount_color = ListProperty([1,1,1,1])
+
+class AddRecentTransactionRow(ButtonBehavior, BoxLayout):
+
+    # ---------- Display ----------
+    category = StringProperty("")
+    amount = StringProperty("")
+    note = StringProperty("")
+    date = StringProperty("")
+
+    amount_color = ListProperty([1, 1, 1, 1])
+
+    # ---------- Data ----------
+    transaction = DictProperty({})
+
+    # ---------- UI ----------
+    pressed = BooleanProperty(False)
+
+    # Callback supplied by FinanceManagerApp
+    use_callback = None
+
+    def on_press(self):
+        self.pressed = True
+
+    def on_release(self):
+        self.pressed = False
+
+        if callable(self.use_callback):
+            self.use_callback(self.transaction)
+
 
 class RecurringRow(BoxLayout):
 

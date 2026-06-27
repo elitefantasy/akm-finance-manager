@@ -193,10 +193,14 @@
                 # -------------------------
 				# Recent Transactions
 				# -------------------------
+				
+				Widget:
+					size_hint_y: None
+					height: dp(6)
 
 				BoxLayout:
 					size_hint_y: None
-					height: 36
+					height: 46
 
 					Label:
 						text: "Recent Transactions"
@@ -368,6 +372,69 @@
         text_size: self.size
 
         color: .55,.55,.55,1
+
+<AddRecentTransactionRow>:
+
+    size_hint_y: None
+    height: dp(68)
+
+    orientation: "vertical"
+
+    padding: [12, 8]
+
+    spacing: 2
+
+    canvas.before:
+
+        Color:
+            rgba: (.18,.18,.18,1) if root.pressed else (.12,.12,.12,1)
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    BoxLayout:
+
+        size_hint_y: None
+        height: dp(22)
+
+        Label:
+            text: root.category
+            bold: True
+
+            halign: "left"
+
+            valign: "middle"
+
+            text_size: self.size
+
+        Label:
+
+            text: root.amount
+
+            bold: True
+
+            color: root.amount_color
+
+            halign: "right"
+
+            valign: "middle"
+
+            text_size: self.size
+
+    Label:
+
+        text: root.note + "   •   " + root.date
+
+        color: .7,.7,.7,1
+
+        halign: "left"
+
+        valign: "middle"
+
+        text_size: self.size
+
             
 
 <AddTransactionScreen>:
@@ -384,53 +451,101 @@
             size_hint_y: None
             height: 40
 
-        # Balance Card
-        BoxLayout:
-            orientation: "vertical"
-            size_hint_y: None
-            height: 140
-            padding: 10
+        # --------------------
+		# Balance Card
+		# --------------------
 
-            canvas.before:
-                Color:
-                    rgba: .15,.15,.15,1
+		Card:
 
-                RoundedRectangle:
-                    pos: self.pos
-                    size: self.size
-                    radius: [15]
+			size_hint_y: None
 
-            Label:
-                text: "Current Balance"
-                size_hint_y: .3
-                bold: True
-                font_size: 36
+			height: app.metrics.Size.ADD_BALANCE_HEIGHT
 
-            Label:
-                text: f"₹{app.balance}"
-                size_hint_y: .5
-                font_size: 28
-                halign: "center"
-                valign: "middle"
-                text_size: self.size
-                bold: True
-                color: (1,0.3,0.3,1) if app.balance < 0 else (0,1,0,1)
+			BoxLayout:
 
-            Label:
-                markup: True
-                text: f"[color=00ff00]₹{app.total_income:.0f}[/color] [color=ff5555]₹{app.total_expense:.0f}[/color]"
-                size_hint_y: .3
-                font_size: 24
-                color: .8,.8,.8,1
+				orientation: "horizontal"
+
+				spacing: dp(4)
+
+				size_hint_y: None
+
+				height: dp(26)
+
+				Label:
+
+					font_name: "MaterialIcons"
+
+					text: app.icons.BALANCE
+
+					font_size: "18sp"
+
+					size_hint_x: None
+
+					width: dp(28)
+
+				Label:
+
+					text: "Balance"
+
+					bold: True
+
+					halign: "left"
+
+					text_size: self.size
+
+			Label:
+
+				text: (f"-₹{abs(app.balance):,.0f}"if app.balance < 0 else f"₹{app.balance:,.0f}")
+
+				font_size: app.metrics.Font.CARD_VALUE
+
+				bold: True
+
+			BoxLayout:
+
+				size_hint_y: None
+
+				height: dp(20)
+
+				spacing: dp(16)
+
+				Label:
+
+					markup: True
+
+					text:
+						"[color=00ff00]Income[/color]"
+
+				Label:
+
+					text:
+						f"₹{app.income:,.0f}"
+
+					color: 0,1,0,1
+
+				Label:
+
+					markup: True
+
+					text:
+						"[color=ff5555]Expense[/color]"
+
+				Label:
+
+					text:
+						f"₹{app.expense:,.0f}"
+
+					color: 1,.35,.35,1
+        
 
         TextInput:
             id: amount
             hint_text: "₹ Amount"
             multiline: False
             input_filter: "float"
-            font_size: 28
+            font_size: app.metrics.Font.NORMAL
             size_hint_y: None
-            height: 60
+            height: app.metrics.Size.TEXT_INPUT_HEIGHT
             halign: "center"
 
         Spinner:
@@ -438,20 +553,20 @@
             text: "Food"
             values: app.categories
             size_hint_y: None
-            height: 55
-            font_size: 24
+            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+            font_size: app.metrics.Font.NORMAL
 
         TextInput:
             id: note
             hint_text: "Note (optional)"
             size_hint_y: None
-            height: 80
+            height: app.metrics.Size.TEXT_INPUT_HEIGHT
 
         # Recent Transactions Card
         BoxLayout:
             orientation: "vertical"
             size_hint_y: None
-            height: 260
+            height: app.metrics.Size.ADD_RECENT_HEIGHT
             padding: 10
 
             canvas.before:
@@ -473,19 +588,20 @@
                 GridLayout:
                     id: recent_list
                     cols: 1
-                    spacing: 5
+                    spacing: app.metrics.Spacing.SMALL
                     size_hint_y: None
                     height: self.minimum_height
 
         # Income / Expense Buttons
         BoxLayout:
             size_hint_y: None
-            height: 55
+            height: app.metrics.Size.ADD_BUTTON_HEIGHT
             spacing: 10
 
             Button:
                 text: "+ Income"
-                background_color: 0, 0.6, 0, 1
+				background_normal: ""
+                background_color: app.metrics.Color.ADD_BUTTON_INCOME
 
                 on_press:
                     app.add_transaction(
@@ -496,7 +612,9 @@
 
             Button:
                 text: "- Expense"
-                background_color: 0.7, 0, 0, 1
+                background_normal: ""
+
+				background_color: app.metrics.Color.ADD_BUTTON_EXPENSE
 
                 on_press:
                     app.add_transaction(
@@ -505,7 +623,6 @@
                     note.text,
                     "Expense")
 
-        Widget:
 
         BottomNav:
         
