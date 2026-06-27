@@ -214,11 +214,22 @@
 
 						on_press:
 							app.go_to_screen("history")
-
+				
+				# adding top margin
+				Widget:
+					size_hint_y: None
+					height: dp(6)
+				
+				# recent transaction box
 				BoxLayout:
 					id: recent_box
+
 					orientation: "vertical"
+
+					spacing: dp(8)
+
 					size_hint_y: None
+
 					height: self.minimum_height
     
                 
@@ -293,6 +304,70 @@
 
             on_press:
                 app.delete_transaction(root.transaction_id)
+
+<DashboardTransactionRow@BoxLayout>
+
+    size_hint_y: None
+    height: dp(78)
+
+    orientation: "vertical"
+
+    padding: [12,8]
+
+    spacing: 2
+
+    canvas.before:
+        Color:
+            rgba: .12,.12,.12,1
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10]
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(24)
+
+        Label:
+            text: root.category
+            bold: True
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
+
+        Label:
+            text: root.amount
+            bold: True
+            halign: "right"
+            valign: "middle"
+            text_size: self.size
+            color: root.amount_color
+
+    Label:
+        text: root.note
+        size_hint_y: None
+        height: dp(18)
+
+        halign: "left"
+        valign: "middle"
+
+        text_size: self.size
+
+        color: .75,.75,.75,1
+
+    Label:
+        text: root.date
+
+        size_hint_y: None
+        height: dp(16)
+
+        halign: "left"
+        valign: "middle"
+
+        text_size: self.size
+
+        color: .55,.55,.55,1
             
 
 <AddTransactionScreen>:

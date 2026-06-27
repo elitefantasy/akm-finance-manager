@@ -382,121 +382,25 @@ class FinanceManagerApp(App):
             recent_box = (dashboard.ids.recent_box)
             recent_box.clear_widgets()
             
-            for t in self.transactions[-5:][::-1]:
+            for transaction in self.transactions[-5:][::-1]:
 
-                row = BoxLayout(
-                    orientation="vertical",
-                    size_hint_y=None,
-                    height=78,
-                    spacing=2,
-                    padding=[12, 6]
-                
+                recent_box.add_widget(
+
+                    DashboardTransactionRow(
+
+                        category=transaction["category"],
+
+                        amount=TransactionFormatter.amount(transaction),
+
+                        note=TransactionFormatter.note(transaction),
+
+                        date=TransactionFormatter.date(transaction),
+
+                        amount_color=TransactionFormatter.amount_color(transaction)
+
+                    )
+
                 )
-
-                # --------------------------
-                # First Row
-                # Category + Amount
-                # --------------------------
-
-                top_row = BoxLayout(
-                    orientation="horizontal",
-                    size_hint_y=None,
-                    height=28
-                )
-                
-                icon = Label(
-                    font_name="MaterialIcons",
-                    text=TransactionFormatter.category_icon(t),
-                    font_size=24,
-                    size_hint=(None, None),
-                    width=40,
-                    height=40,
-                    color=(0.9, 0.9, 0.9, 1)
-                )
-
-                category_label = Label(
-                    text=t["category"],
-                    bold=True,
-                    font_size=Font.NORMAL,
-                    size_hint_y=None,
-                    height=24,
-                    halign="left",
-                    valign="middle"
-                )
-
-                category_label.bind(
-                    size=lambda instance, value:
-                    setattr(instance, "text_size", value)
-                )
-
-                amount_label = Label(
-                    text=TransactionFormatter.amount(t),
-                    bold=True,
-                    font_size=Font.NORMAL,
-                    size_hint_y=None,
-                    height=28,
-                    halign="right",
-                    valign="middle",
-                    color=((0, 1, 0, 1)if t["type"] == "Income"else (1, 0.3, 0.3, 1)),
-                    text_size=(0, None)
-                )
-
-                amount_label.bind(
-                    size=lambda instance, value:
-                    setattr(instance, "text_size", value)
-                )
-                
-                top_row.add_widget(icon)
-                top_row.add_widget(category_label)
-                top_row.add_widget(amount_label)
-
-                row.add_widget(top_row)
-
-                # --------------------------
-                # Note
-                # --------------------------
-
-                note = TransactionFormatter.note(t)
-
-                note_label = Label(
-                    text=note,
-                    font_size=Font.SMALL,
-                    size_hint_y=None,
-                    height=18,
-                    color=(0.75, 0.75, 0.75, 1),
-                    halign="left",
-                    valign="middle"
-                )
-
-                note_label.bind(
-                    size=lambda instance, value:
-                    setattr(instance, "text_size", value)
-                )
-
-                row.add_widget(note_label)
-
-                # --------------------------
-                # Date
-                # --------------------------
-
-                date_label = Label(
-                    text=TransactionFormatter.date(t),
-                    font_size=Font.SMALL,
-                    size_hint_y=None,
-                    height=18,
-                    color=(0.55, 0.55, 0.55, 1),
-                    halign="left",
-                    valign="middle"
-                )
-
-                date_label.bind(
-                    size=lambda instance, value:
-                    setattr(instance, "text_size", value)
-                )
-
-                row.add_widget(date_label)
-
-                recent_box.add_widget(row)
                 
               
                             

@@ -56,6 +56,15 @@ class TransactionRow(BoxLayout):
 
     transaction_id = NumericProperty(0)
 
+class DashboardTransactionRow(BoxLayout):
+
+    category = StringProperty("")
+    amount = StringProperty("")
+    note = StringProperty("")
+    date = StringProperty("")
+
+    amount_color = ListProperty([1,1,1,1])
+
 class RecurringRow(BoxLayout):
 
     text = StringProperty("")
