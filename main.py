@@ -387,9 +387,9 @@ class FinanceManagerApp(App):
                 row = BoxLayout(
                     orientation="vertical",
                     size_hint_y=None,
-                    height=95,
-                    spacing=4,
-                    padding=[12, 10]
+                    height=78,
+                    spacing=2,
+                    padding=[12, 6]
                 
                 )
 
@@ -419,7 +419,7 @@ class FinanceManagerApp(App):
                     bold=True,
                     font_size=Font.NORMAL,
                     size_hint_y=None,
-                    height=34,
+                    height=24,
                     halign="left",
                     valign="middle"
                 )
@@ -437,11 +437,8 @@ class FinanceManagerApp(App):
                     height=28,
                     halign="right",
                     valign="middle",
-                    color=(
-                        (0, 1, 0, 1)
-                        if t["type"] == "Income"
-                        else (1, 0.3, 0.3, 1)
-                    )
+                    color=((0, 1, 0, 1)if t["type"] == "Income"else (1, 0.3, 0.3, 1)),
+                    text_size=(0, None)
                 )
 
                 amount_label.bind(
@@ -465,7 +462,7 @@ class FinanceManagerApp(App):
                     text=note,
                     font_size=Font.SMALL,
                     size_hint_y=None,
-                    height=24,
+                    height=18,
                     color=(0.75, 0.75, 0.75, 1),
                     halign="left",
                     valign="middle"
@@ -486,7 +483,7 @@ class FinanceManagerApp(App):
                     text=TransactionFormatter.date(t),
                     font_size=Font.SMALL,
                     size_hint_y=None,
-                    height = Font.SMALL * 2,
+                    height=18,
                     color=(0.55, 0.55, 0.55, 1),
                     halign="left",
                     valign="middle"

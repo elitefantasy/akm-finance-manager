@@ -34,8 +34,8 @@ class Size:
     TEXT_INPUT_HEIGHT = dp(48 * UI_SCALE)
 
     # Dashboard
-    BALANCE_CARD_HEIGHT = dp(120 * UI_SCALE)
-    STAT_CARD_HEIGHT = dp(110 * UI_SCALE)
+    BALANCE_CARD_HEIGHT = dp(100 * UI_SCALE)
+    STAT_CARD_HEIGHT = dp(90 * UI_SCALE)
     DASHBOARD_RECENT_HEIGHT = dp(320 * UI_SCALE)
 
     # Lists
