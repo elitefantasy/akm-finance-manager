@@ -766,18 +766,25 @@ class FinanceManagerApp(App):
             )
 
             if not success:
-                title = "Invalid Database"
 
-                if message in [
-                    "Database not found",
-                    "Database already exists"
-                ]:
-                    title = "Error"
+                if message == "Database already exists":
+
+                    DialogManager.confirm(
+                        "Replace Database",
+                        f"{db_name} already exists.\n\nReplace it with the backup?",
+                        lambda: self.replace_database(
+                            db_name,
+                            popup,
+                        ),
+                    )
+
+                    return
 
                 DialogManager.show_message(
-                    title,
-                    message
+                    "Error",
+                    message,
                 )
+
                 return
 
             self.refresh_database_list()
@@ -796,6 +803,69 @@ class FinanceManagerApp(App):
             DialogManager.show_message(
                 "Error",
                 str(e)
+            )
+
+    def replace_database(
+        self,
+        db_name,
+        popup,
+    ):
+
+        try:
+
+            if self.current_database == db_name:
+                self.db.conn.close()
+
+            success, message, _ = (
+                backup_service.import_database_file(
+                    db_name,
+                    App.get_running_app().user_data_dir,
+                    overwrite=True,
+                )
+            )
+
+            if not success:
+
+                DialogManager.show_message(
+                    "Error",
+                    message,
+                )
+
+                if self.current_database == db_name:
+                    self.db = DatabaseManager(db_name)
+
+                return
+
+            if self.current_database == db_name:
+
+                self.db = DatabaseManager(db_name)
+
+                self.categories = self.db.load_categories_db()
+
+                self.transactions = self.db.load_transactions_db()
+
+                self.recurring_transactions = self.db.load_recurring_db()
+
+                self.refresh_categories()
+
+                self.refresh_recurring_view()
+
+                self.update_dashboard()
+
+            popup.dismiss()
+
+            self.refresh_database_list()
+
+            DialogManager.show_message(
+                "Success",
+                f"{db_name} replaced successfully.",
+            )
+
+        except Exception as e:
+
+            DialogManager.show_message(
+                "Error",
+                str(e),
             )
     
     def show_import_popup(self):

@@ -3,7 +3,9 @@ import shutil
 
 from core.database import DatabaseManager
 from core.constants import get_backup_dir
+from core.database_service import normalize_database_name
 
+from kivy.app import App
 
 
 def get_export_dir():
@@ -47,12 +49,14 @@ def backup_database(source_path, database_name, backup_dir=None):
 def import_database_file(
     filename,
     user_data_dir,
-    backup_dir=None,):
+    backup_dir=None,
+    overwrite=False,
+):
 
     if backup_dir is None:
         backup_dir = get_backup_dir()
 
-    db_name = normalize_database_filename(filename)
+    db_name = normalize_database_name(filename)
 
     source = os.path.join(
         backup_dir,
@@ -67,15 +71,19 @@ def import_database_file(
     if not os.path.exists(source):
         return False, "Database not found", db_name
 
-    if os.path.exists(destination):
-        return False, "Database already exists", db_name
-
     is_valid, error_message = (
         DatabaseManager.validate_database_schema(source)
     )
 
     if not is_valid:
         return False, error_message, db_name
+
+    if os.path.exists(destination):
+
+        if not overwrite:
+            return False, "Database already exists", db_name
+
+        os.remove(destination)
 
     shutil.copy2(source, destination)
 
