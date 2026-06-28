@@ -825,7 +825,35 @@
 					
 					height: (app.metrics.Size.TEXT_INPUT_HEIGHT if app.recurring_enabled else 0 )
 
-		        # Widget:
+		        
+
+		        # Income / Expense Buttons
+		        BoxLayout:
+		            size_hint_y: None
+		            height: app.metrics.Size.BUTTON_HEIGHT
+		            spacing: app.metrics.Spacing.NORMAL
+
+		            AppSuccessButton:
+    					text:"+ Income"
+
+		                on_press:
+						    app.recurring_enabled = False
+
+						    app.add_transaction(amount.text,category.text,note.text,"Income")
+						        
+
+
+		            AppDangerButton:
+    					text:"- Expense"
+
+		                on_press:
+		                    app.add_transaction(
+		                    amount.text,
+		                    category.text,
+		                    note.text,
+		                    "Expense")
+
+                # Widget:
 		        #     size_hint_y: None
 		        #     height: dp(4)
 
@@ -864,7 +892,7 @@
 					
 					Widget:
 						size_hint_y: None
-						height: app.metrics.Spacing.SMALL
+						height: app.metrics.Spacing.NORMAL
 
 					# -------------------------
 					# Recent Transaction List
@@ -887,32 +915,6 @@
 					    size_hint_y: None
 
 					    height: self.minimum_height
-
-		        # Income / Expense Buttons
-		        BoxLayout:
-		            size_hint_y: None
-		            height: app.metrics.Size.BUTTON_HEIGHT
-		            spacing: app.metrics.Spacing.NORMAL
-
-		            AppSuccessButton:
-    					text:"+ Income"
-
-		                on_press:
-						    app.recurring_enabled = False
-
-						    app.add_transaction(amount.text,category.text,note.text,"Income")
-						        
-
-
-		            AppDangerButton:
-    					text:"- Expense"
-
-		                on_press:
-		                    app.add_transaction(
-		                    amount.text,
-		                    category.text,
-		                    note.text,
-		                    "Expense")
 
 
         BottomNav:
