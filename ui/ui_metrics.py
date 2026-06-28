@@ -40,7 +40,7 @@ class Size:
 
     # Lists
     LIST_ITEM_HEIGHT = dp(45 * UI_SCALE)
-    RECENT_ITEM_HEIGHT = dp(80 * UI_SCALE)
+    RECENT_ITEM_HEIGHT = dp(65 * UI_SCALE)
 
     # Navigation
     BOTTOM_NAV_HEIGHT = dp(80 * UI_SCALE)

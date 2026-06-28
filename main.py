@@ -296,10 +296,7 @@ class FinanceManagerApp(App):
         
         self.transactions.append(transaction)
         
-        if (
-            self.recurring_enabled
-            and ttype == "Expense"
-        ):
+        if (self.recurring_enabled):
             self.add_recurring(
                 amount,
                 category,
@@ -1478,16 +1475,25 @@ class FinanceManagerApp(App):
             padding=10
         )
 
-        categories = Button(text="Categories")
+        categories = Button(
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.CATEGORY}[/font]  Categories"
+        )
 
-        data = Button(text="Data Management")
-        
-        recurring = Button(
-            text="Recurring Manager"
+        data = Button(
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.DATABASE}[/font]  Data Management"
         )
         
-        statistics=Button(
-          text="statistics")
+        recurring = Button(
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.REPEAT}[/font]  Recurring Manager"
+        )
+        
+        statistics = Button(
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.CALENDAR}[/font]  Statistics"
+        )
 
         layout.add_widget(categories)
         
@@ -1538,6 +1544,9 @@ class FinanceManagerApp(App):
         popup.dismiss()
     
     def go_to_screen(self, screen_name):
+        if screen_name == "manage_recurring":
+            self.refresh_recurring_view()
+
         self.root.current = screen_name
         self.current_screen = screen_name
 

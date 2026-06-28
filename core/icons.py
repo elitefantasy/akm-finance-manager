@@ -19,7 +19,14 @@ class Icons:
     DELETE = "\ue872"
     BACKUP = "\ue864"
     DATABASE = "\ue1db"
-    
+    OPEN = "\ue89e"
+    CATEGORY_MANAGER = "\ue574"
+    FOLDER = "\ue2c7"
+    STATISTICS = "\ue9d2"
+    SAVE = "\ue161"
+    CANCEL = "\ue5cd"
+    SEARCH = "\ue8b6"
+        
     # Categories
     FOOD = "\ue56c"
     TRAVEL = "\ue53d"
