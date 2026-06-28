@@ -2,18 +2,35 @@ import os
 import shutil
 
 from core.database import DatabaseManager
-
-from kivy.app import App
-
+from core.constants import get_backup_dir
 
 
+
+def get_export_dir():
+
+    try:
+        from android.storage import primary_external_storage_path
+
+        export_dir = os.path.join(
+            primary_external_storage_path(),
+            "Download",
+            "FinanceManager",
+        )
+
+    except ImportError:
+
+        export_dir = os.path.join(
+            App.get_running_app().user_data_dir,
+            "exports",
+        )
+
+    os.makedirs(export_dir, exist_ok=True)
+
+    return export_dir
 
 def backup_database(source_path, database_name, backup_dir=None):
     if backup_dir is None:
-        backup_dir = os.path.join(
-            App.get_running_app().user_data_dir,
-            "backups",
-        )
+         backup_dir = get_backup_dir()
 
     os.makedirs(backup_dir, exist_ok=True)
 
@@ -33,10 +50,7 @@ def import_database_file(
     backup_dir=None,):
 
     if backup_dir is None:
-        backup_dir = os.path.join(
-            App.get_running_app().user_data_dir,
-            "backups",
-        )
+        backup_dir = get_backup_dir()
 
     db_name = normalize_database_filename(filename)
 
@@ -72,10 +86,7 @@ def import_database_file(
 
 def list_backup_databases(backup_dir=None):
     if backup_dir is None:
-        backup_dir = os.path.join(
-            App.get_running_app().user_data_dir,
-            "backups",
-        )
+        backup_dir = get_backup_dir()
 
     if not os.path.exists(backup_dir):
         return []

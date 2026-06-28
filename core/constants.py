@@ -14,6 +14,8 @@ BACKUPS_DIR_NAME = "backups"
 LOGS_DIR_NAME = "logs"
 CSV_EXPORT_FILE = "finance_export.csv"
 
+EXPORT_FOLDER_NAME = "FinanceManager"
+
 DEFAULT_CATEGORIES = [
     "Food",
     "Travel",

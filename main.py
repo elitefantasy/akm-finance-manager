@@ -732,23 +732,22 @@ class FinanceManagerApp(App):
     
 
     def backup_data(self):
-    
+
         try:
+
             backup_path = backup_service.backup_database(
                 self.db.db_path,
-                self.current_database
+                self.current_database,
             )
-
-            backup_path = os.path.abspath(backup_path)
 
             DialogManager.show_message(
                 "Backup Successful",
                 f"{self.current_database} backed up successfully.\n\n"
                 f"Location:\n{backup_path}"
             )
-    
+
         except Exception as e:
-    
+
             DialogManager.show_message(
                 "Error",
                 str(e)
