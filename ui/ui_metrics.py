@@ -53,6 +53,9 @@ class Size:
 
     ADD_BUTTON_HEIGHT = dp(48 * UI_SCALE)
 
+    # History Screen
+    HISTORY_ITEM_HEIGHT = dp(110 * UI_SCALE)
+
 
 # --------------------------------------------------
 # Spacing
