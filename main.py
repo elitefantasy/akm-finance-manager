@@ -20,6 +20,7 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
+from kivy.factory import Factory
 
 from core import backup_service
 from core import database_service
@@ -795,26 +796,28 @@ class FinanceManagerApp(App):
             padding=10
         )
 
-        day = TextInput(
+        day = Factory.AppTextInput(
             hint_text="DD",
-            multiline=False
+            input_filter="int",
         )
 
-        month = TextInput(
+        month = Factory.AppTextInput(
             hint_text="MM",
-            multiline=False
+            input_filter="int",
         )
 
-        year = TextInput(
+        year = Factory.AppTextInput(
             hint_text="YYYY",
-            multiline=False
+            input_filter="int",
         )
 
         layout.add_widget(day)
         layout.add_widget(month)
         layout.add_widget(year)
 
-        save_btn = Button(text="Save Date")
+        save_btn = Factory.AppPrimaryButton(
+            text="Save Date"
+        )
         layout.add_widget(save_btn)
 
         popup = Popup(
@@ -1028,22 +1031,23 @@ class FinanceManagerApp(App):
             padding=10
         )
 
-        amount = TextInput(
+        amount = Factory.AppTextInput(
             text=str(recurring["amount"]),
-            multiline=False
+            input_filter="float",
         )
 
-        category = Spinner(
+        category = Factory.AppSpinner(
             text=recurring["category"],
             values=self.categories
         )
 
-        day = TextInput(
+        day = Factory.AppTextInput(
+            input_filter="int",
             text=str(recurring["day"]),
             multiline=False
         )
 
-        save_btn = Button(
+        save_btn = Factory.AppPrimaryButton(
             text="Save"
         )
 
@@ -1166,39 +1170,18 @@ class FinanceManagerApp(App):
         
         self.refresh_categories()
     
-    def edit_category(self,category_id,old_name):
-        layout = BoxLayout(
-            orientation="vertical",
-            spacing=10,
-            padding=10
-        )
+    def edit_category(self, category_id, old_name):
 
-        name = TextInput(
-            text=old_name,
-            multiline=False
-        )
-
-        save = Button(
-            text="Save"
-        )
-
-        layout.add_widget(name)
-
-        layout.add_widget(save)
-
-        popup = Popup(
+        popup = DialogManager.text_input_popup(
             title="Edit Category",
-            content=layout,
-            size_hint=(.8,.4)
-        )
-
-        save.bind(
-            on_press=lambda x:
-            self.save_category_edit(
-                category_id,
-                name.text,
-                popup
-            )
+            text=old_name,
+            button_text="Save",
+            callback=lambda value, p:
+                self.save_category_edit(
+                    category_id,
+                    value,
+                    p,
+                ),
         )
 
         popup.open()
@@ -1224,31 +1207,17 @@ class FinanceManagerApp(App):
         add_screen.ids.amount.focus = True
     
     def create_database_popup(self):
-        layout=BoxLayout(
-            orientation="vertical",
-            spacing=10,
-            padding=10)
-            
-        name=TextInput(
-            hint_text="Database Name",
-            multiline=False)
-        
-        create_btn=Button(text="Create")
-        
-        layout.add_widget(name)
-        layout.add_widget(create_btn)
-        
-        popup=Popup(
-            title="Create Database",
-            content=layout,
-            size_hint=(.8,.4))
-        
-        create_btn.bind(
-            on_press=lambda x:
-                self.create_new_database(name.text,popup))
 
-        self.log(f"opening create database popup")
-        
+        popup = DialogManager.text_input_popup(
+            title="Create Database",
+            hint_text="Database Name",
+            button_text="Create",
+            callback=lambda value, p:
+                self.create_new_database(value, p),
+        )
+
+        self.log("opening create database popup")
+
         popup.open()
     
     def create_new_database(self,name,popup):
@@ -1305,34 +1274,21 @@ class FinanceManagerApp(App):
             )
         ]
             
-    def rename_database_popup(self,old_name):
-      layout=BoxLayout(
-        orientation="vertical",
-        spacing=10,
-        padding=10)
-        
-      name_input=TextInput(
-        text=old_name.replace(".db",""),
-        multiline=False)
-      
-      save_btn=Button(text="Save")
-      
-      layout.add_widget(name_input)
-      layout.add_widget(save_btn)
-      
-      popup=Popup(
-        title="Rename Database",
-        content=layout,
-        size_hint=(.8,.4))
-      
-      save_btn.bind(
-        on_press=lambda x:
-          self.rename_database(
-            old_name,
-            name_input.text,
-            popup))
-      
-      popup.open()
+    def rename_database_popup(self, old_name):
+
+        popup = DialogManager.text_input_popup(
+            title="Rename Database",
+            text=old_name.replace(".db", ""),
+            button_text="Save",
+            callback=lambda value, p:
+                self.rename_database(
+                    old_name,
+                    value,
+                    p,
+                ),
+        )
+
+        popup.open()
     
     def rename_database(self,old_name,new_name,popup):
         user_dir = App.get_running_app().user_data_dir
@@ -1379,10 +1335,10 @@ class FinanceManagerApp(App):
         self.refresh_database_list()
         popup.dismiss()
     
-    def delete_database_popup(self,db_name):
+    def delete_database_popup(self, db_name):
 
-        self.log(f"opening delete database popup")
-        
+        self.log("opening delete database popup")
+
         if db_name == self.current_database:
             DialogManager.show_message(
                 "Error",
@@ -1390,54 +1346,16 @@ class FinanceManagerApp(App):
             )
             return
 
-        layout = BoxLayout(
-            orientation="vertical",
-            spacing=10,
-            padding=10
+        DialogManager.confirm(
+            "Confirm Delete",
+            f"Delete {db_name}?",
+            lambda: self.delete_database(db_name)
         )
-
-        layout.add_widget(
-            Label(
-                text=f"Delete {db_name}?"))
-
-        buttons = BoxLayout(
-            spacing=10
-        )
-        yes_btn = Button(
-            text="Yes"
-        )
-        no_btn = Button(
-            text="No"
-        )
-
-        buttons.add_widget(yes_btn)
-        buttons.add_widget(no_btn)
-
-        layout.add_widget(buttons)
-
-        popup = Popup(
-            title="Confirm Delete",
-            content=layout,
-            size_hint=(.8,.4)
-        )
-
-        yes_btn.bind(
-            on_press=lambda x:
-            self.delete_database(
-                db_name,
-                popup
-            )
-        )
-
-        no_btn.bind(
-            on_press=lambda x:
-            popup.dismiss()
-        )
-
-        popup.open()
     
-    def delete_database(self,db_name,popup):
+    def delete_database(self, db_name):
+
         try:
+
             success, message = (
                 database_service.delete_database_file(
                     App.get_running_app().user_data_dir,
@@ -1454,43 +1372,67 @@ class FinanceManagerApp(App):
                 return
 
             self.refresh_database_list()
-            popup.dismiss()
+
             DialogManager.show_message(
                 "Success",
                 f"{db_name} deleted"
             )
-            self.log(f"database deleted succesfully")
+
+            self.log(f"database deleted: {db_name}")
 
         except Exception as e:
-          DialogManager.show_message(
-               "Error",
-              str(e)
-          )
+
+            DialogManager.show_message(
+                "Error",
+                str(e)
+            )
 
     def more_menu(self):
 
+        metrics = self.metrics
+
         layout = BoxLayout(
             orientation="vertical",
-            spacing=10,
-            padding=10
+            spacing=metrics.Spacing.POPUP,
+            padding=metrics.Padding.POPUP,
         )
 
         categories = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
             markup=True,
             text=f"[font=MaterialIcons]{self.icons.CATEGORY}[/font]  Categories"
         )
 
         data = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
             markup=True,
             text=f"[font=MaterialIcons]{self.icons.DATABASE}[/font]  Data Management"
         )
         
         recurring = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
             markup=True,
             text=f"[font=MaterialIcons]{self.icons.REPEAT}[/font]  Recurring Manager"
         )
         
         statistics = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
             markup=True,
             text=f"[font=MaterialIcons]{self.icons.CALENDAR}[/font]  Statistics"
         )
@@ -1503,9 +1445,9 @@ class FinanceManagerApp(App):
         
         layout.add_widget(statistics)
 
-        popup = Popup(title="More",
-            content=layout,
-            size_hint=(.8,.5)
+        popup = DialogManager.create_popup(
+            "More",
+            layout,
         )
 
         categories.bind(

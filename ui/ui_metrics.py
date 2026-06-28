@@ -56,6 +56,12 @@ class Size:
     # History Screen
     HISTORY_ITEM_HEIGHT = dp(110 * UI_SCALE)
 
+    # Popup metrics
+    POPUP_SMALL = (.8, .35)
+    POPUP_MEDIUM = (.8, .45)
+    POPUP_LARGE = (.8, .65)
+    POPUP_BUTTON_HEIGHT = dp(42 * UI_SCALE)
+
 
 # --------------------------------------------------
 # Spacing
@@ -66,6 +72,8 @@ class Spacing:
     NORMAL = dp(12 * UI_SCALE)
     LARGE = dp(20 * UI_SCALE)
 
+    POPUP = dp(12 * UI_SCALE)
+
 
 # --------------------------------------------------
 # Padding
@@ -74,6 +82,8 @@ class Spacing:
 class Padding:
     SCREEN = dp(16 * UI_SCALE)
     CARD = dp(12 * UI_SCALE)
+
+    POPUP = dp(16 * UI_SCALE)
 
 
 class Border:
@@ -93,12 +103,17 @@ class Radius:
 # --------------------------------------------------
 
 class Color:
+    # surface colors
+    BACKGROUND = (.05, .05, .05, 1)  # App background
+    SURFACE = (.21, .21, .21, 1) # Inputs / Spinners
+    SURFACE_VARIANT = (.26, .26, .26, 1) # Pressed / Selected
+
     # Navigation
     NAV_ACTIVE = (0.20, 0.50, 1.00, 1)
     NAV_INACTIVE = (0.30, 0.30, 0.30, 1)
 
     # Cards
-    CARD = (0.15, 0.15, 0.15, 1)
+    CARD = (0.15, 0.15, 0.15, 1) # Cards
     ADD_INPUT = (.12, .12, .12, 1)
 
     ADD_CARD = (.15, .15, .15, 1)
@@ -117,6 +132,7 @@ class Color:
 
     # Buttons
     PRIMARY = (0.20, 0.50, 1.00, 1)
+    INACTIVE= (0.23, 0.23, 0.23, 1)
     SUCCESS = (0.00, 0.60, 0.00, 1)
     DANGER = (0.70, 0.00, 0.00, 1)
     

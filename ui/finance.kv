@@ -11,6 +11,128 @@
             size: self.size
             radius: [15]
 
+<PopupContent@BoxLayout>
+
+    orientation: "vertical"
+
+    spacing: app.metrics.Spacing.POPUP
+
+    padding: app.metrics.Padding.POPUP
+
+<PopupButtonRow@BoxLayout>
+
+    size_hint_y: None
+
+    height: app.metrics.Size.POPUP_BUTTON_HEIGHT
+
+    spacing: app.metrics.Spacing.NORMAL
+
+
+
+<AppButton@Button>
+
+    background_normal: ""
+    background_down: ""
+
+    background_color: rgba(59, 59, 59)
+
+    color: app.metrics.Color.TEXT_PRIMARY
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_y: None
+    height: app.metrics.Size.BUTTON_HEIGHT
+
+<AppPrimaryButton@AppButton>
+
+    background_color: app.metrics.Color.PRIMARY
+
+<AppSuccessButton@AppButton>
+
+    background_color: app.metrics.Color.SUCCESS
+
+<AppDangerButton@AppButton>
+
+    background_color: app.metrics.Color.DANGER
+
+<AppIconButton@Button>
+
+    markup: True
+
+    background_normal: ""
+    background_down: ""
+
+    background_color: 0,0,0,0
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_x: None
+
+    width: dp(32)
+
+<AppPopupButton@AppButton>
+
+    size_hint_y: None
+    height: app.metrics.Size.POPUP_BUTTON_HEIGHT
+
+<AppTextInput@TextInput>
+
+    multiline: False
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_y: None
+    height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
+    padding: [dp(12), dp(12)]
+
+    background_normal: ""
+    background_active: ""
+
+    background_color: app.metrics.Color.SURFACE
+
+    foreground_color: app.metrics.Color.TEXT_PRIMARY
+
+    hint_text_color: app.metrics.Color.TEXT_SECONDARY
+
+    cursor_color: app.metrics.Color.NAV_ACTIVE
+
+    cursor_width: "2dp"
+
+    selection_color: (.25, .45, .0, .35)
+
+<AppSpinner@Spinner>
+	
+	option_cls: "AppSpinnerOption"
+
+    size_hint_y: None
+    height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
+    font_size: app.metrics.Font.NORMAL
+
+    background_normal: ""
+    background_color: app.metrics.Color.SURFACE
+
+    color: app.metrics.Color.TEXT_PRIMARY
+
+    sync_height: True
+
+# dropdown options
+<AppSpinnerOption@SpinnerOption>
+
+    background_normal: ""
+    background_down: ""
+
+    background_color: 
+    	(app.metrics.Color.SURFACE_VARIANT) if self.state == "down" else app.metrics.Color.SURFACE
+
+    color: app.metrics.Color.TEXT_PRIMARY
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_y: None
+    height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
 <DashboardScreen>
     BoxLayout:
         orientation:"vertical"
@@ -210,7 +332,7 @@
 						halign: "left"
 						text_size: self.size
 
-					Button:
+					AppButton:
 						text: "View All"
 						size_hint_x: None
 						width: dp(90)
@@ -353,7 +475,7 @@
 	                size: dp(56), dp(24)
 	                spacing: dp(6)
 
-	                Button:
+	                AppButton:
 	                    markup: True
 	                    size_hint_x: None
 	                    width: dp(24)
@@ -367,7 +489,7 @@
 	                    on_press:
 	                        app.open_edit(root.transaction_id)
 
-	                Button:
+	                AppDangerButton:
 	                    markup: True
 	                    size_hint_x: None
 	                    width: dp(24)
@@ -625,29 +747,27 @@
 							color: app.metrics.Color.EXPENSE
 		        
 
-		        TextInput:
+		        AppTextInput:
 		            id: amount
 		            hint_text: "₹ Amount"
-		            multiline: False
+		            
 		            input_filter: "float"
-		            font_size: app.metrics.Font.NORMAL
-		            size_hint_y: None
-		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+		            
+		           
+		            
 		            halign: "center"
 
-		        Spinner:
+		        AppSpinner:
 		            id: category
 		            text: "Food"
 		            values: app.categories
-		            size_hint_y: None
-		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
-		            font_size: app.metrics.Font.NORMAL
-
-		        TextInput:
+		            
+		          
+		        AppTextInput:
 		            id: note
 		            hint_text: "Note (optional)"
-		            size_hint_y: None
-		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+		            
+		            
 				
 				# --------------------
 				# Recurring Transaction
@@ -690,9 +810,7 @@
 					id: recurring_day
 
 					hint_text: "Repeat on day (1–31)"
-
-					multiline: False
-
+			
 					input_filter: "int"
 
 					text: app.recurring_day
@@ -704,8 +822,7 @@
 
 					disabled: not app.recurring_enabled
 
-					size_hint_y: None
-
+					
 					height: (app.metrics.Size.TEXT_INPUT_HEIGHT if app.recurring_enabled else 0 )
 
 		        # Widget:
@@ -777,10 +894,8 @@
 		            height: app.metrics.Size.BUTTON_HEIGHT
 		            spacing: app.metrics.Spacing.NORMAL
 
-		            Button:
-		                text: "+ Income"
-						background_normal: ""
-		                background_color: app.metrics.Color.ADD_BUTTON_INCOME
+		            AppSuccessButton:
+    					text:"+ Income"
 
 		                on_press:
 						    app.recurring_enabled = False
@@ -789,11 +904,8 @@
 						        
 
 
-		            Button:
-		                text: "- Expense"
-		                background_normal: ""
-
-						background_color: app.metrics.Color.ADD_BUTTON_EXPENSE
+		            AppDangerButton:
+    					text:"- Expense"
 
 		                on_press:
 		                    app.add_transaction(
@@ -868,7 +980,7 @@
 		                on_text:
 		                    app.update_search(self.text)
 
-		        Spinner:
+		        AppSpinner:
 		            text: "All"
 
 		            values:
@@ -877,16 +989,11 @@
 		                "Income",
 		                "Expense"
 		                )
-
-		            size_hint_y: None
-
-		            height:
-		                app.metrics.Size.TEXT_INPUT_HEIGHT
-
+		            
 		            on_text:
 		                app.update_filter(self.text)
 
-		        Spinner:
+		        AppSpinner:
 		            text: "Newest First"
 
 		            values:
@@ -898,10 +1005,6 @@
 		                "Category A-Z"
 		                )
 
-		            size_hint_y: None
-
-		            height:
-		                app.metrics.Size.TEXT_INPUT_HEIGHT
 
 		            on_text:
 		                app.update_sort(self.text)
@@ -966,30 +1069,30 @@
             halign: "left"
             text_size: self.size
 
-        TextInput:
+        AppTextInput:
             id: amount
             hint_text: "Amount"
 
-        TextInput:
+        AppTextInput:
             id: category
             hint_text: "Category"
         
-        TextInput:
+        AppTextInput:
             id: note
             hint_text: "note"
         
-        TextInput:
+        AppTextInput:
             id: date
             hint_text: "Date"
         
-        Button:
+        AppButton:
             text: "Change Date"
 
             on_press:
                 app.edit_date_popup()
         
 
-        Button:
+        AppButton:
             text: "Save"
 
             on_press:
@@ -1000,7 +1103,7 @@
                 date.text
                 )
 
-        Button:
+        AppDangerButton:
             text: "Cancel"
 
             on_press:
@@ -1066,12 +1169,12 @@
                 height:self.minimum_height
                 orientation:"vertical"
         
-        Button:
+        AppButton:
             text: "Create New Database"
             on_press:app.create_database_popup()        
         
                 
-        Button:
+        AppButton:
             text: "Backup Data"
 
             size_hint_y: .15
@@ -1079,12 +1182,12 @@
             on_press:
                 app.backup_data()
         
-        Button:
+        AppButton:
             text: "Import Database"
             size_hint_y: .15
             on_press: app.show_import_popup()
         
-        Button:
+        AppDangerButton:
             text: "clear Data"
 
             size_hint_y: .15
@@ -1092,7 +1195,7 @@
             on_press:
                 app.clear_all_data()
         
-        Button:
+        AppButton:
             text: "Export CSV"
             size_hint_y: None
             #height: 60
@@ -1109,17 +1212,17 @@
         padding: 10
         spacing: 10
 
-        TextInput:
+        AppTextInput:
             id: amount
             hint_text: "Amount"
 
-        Spinner:
+        AppSpinner:
             id: category
             text: "Food"
 
             values: app.categories
 
-        TextInput:
+        AppTextInput:
             id: day
             hint_text: "Day Of Month"
 
@@ -1128,7 +1231,7 @@
             size_hint_y: None
             height: 30
 
-        Button:
+        AppPrimaryButton:
             text: "Add Recurring Expense"
 
             on_press:
@@ -1141,23 +1244,20 @@
     Label:
         text: root.db_name
    
-    Button:
-	    markup: True
+    AppIconButton:
 	    font_size: app.metrics.Font.NORMAL
 	    text: f"[font=MaterialIcons]{app.icons.OPEN}[/font]"
 	    size_hint_x: .25
         on_press:app.switch_database(root.db_name)
 
-    Button:
-	    markup: True
+    AppIconButton:
 	    font_size: app.metrics.Font.NORMAL
 	    text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
         size_hint_x:.25
         on_press:
             app.rename_database_popup(root.db_name)
     
-    Button:
-	    markup: True
+    AppIconButton:
 	    font_size: app.metrics.Font.NORMAL
 	    text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
         size_hint_x: .25
@@ -1183,13 +1283,13 @@
 
 		    color: .8, .8, .8, 1
 
-        Button:
+        AppButton:
             text: "Manage Recurring Transactions"
 
             on_press:
                 app.open_manage_recurring()
         
-        Button:
+        AppButton:
             text: "Manage Categories"
 
             on_press:
@@ -1208,12 +1308,12 @@
     Label:
         text: root.text
     
-    Button:
+    AppButton:
         text: "Edit"
         size_hint_x: .3
         on_press:app.edit_recurring(root.index)
 
-    Button:
+    AppDangerButton:
         text: "Delete"
         size_hint_x: .3
         on_press:app.delete_recurring(root.index)
@@ -1249,11 +1349,11 @@
         padding: 10
         spacing: 10
 
-        TextInput:
+        AppTextInput:
             id: category_name
             hint_text: "New Category"
 
-        Button:
+        AppButton:
             text: "Add Category"
 
             on_press:
@@ -1285,7 +1385,7 @@
     Label:
         text: root.text
 
-    Button:
+    AppButton:
         markup: True
 		font_size: app.metrics.Font.NORMAL
 		text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
@@ -1295,7 +1395,7 @@
         on_press:
             app.edit_category(root.category_id,root.text)
 
-    Button:
+    AppDangerButton:
         markup: True
 		font_size: app.metrics.Font.NORMAL
 		text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
