@@ -61,6 +61,7 @@ class Size:
     POPUP_MEDIUM = (.8, .45)
     POPUP_LARGE = (.8, .65)
     POPUP_BUTTON_HEIGHT = dp(42 * UI_SCALE)
+    POPUP_MESSAGE = (0.85, 0.42)
 
 
 # --------------------------------------------------

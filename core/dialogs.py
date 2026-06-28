@@ -23,9 +23,31 @@ class DialogManager:
             padding=metrics.Padding.POPUP
         )
 
-        layout.add_widget(
-            Label(text=message)
+        message_label = Label(
+            text=message,
+            halign="left",
+            valign="top",
         )
+
+        message_label.bind(
+            width=lambda instance, width: setattr(
+                instance,
+                "text_size",
+                (width, None),
+            )
+        )
+
+        message_label.bind(
+            texture_size=lambda instance, value: setattr(
+                instance,
+                "height",
+                value[1]
+            )
+        )
+
+        message_label.size_hint_y = None
+
+        layout.add_widget(message_label)
 
         ok_btn = Button(
             text="OK",
@@ -41,7 +63,7 @@ class DialogManager:
         popup = Popup(
             title=title,
             content=layout,
-            size_hint=metrics.Size.POPUP_SMALL
+            size_hint=metrics.Size.POPUP_MESSAGE
         )
 
         ok_btn.bind(on_press=popup.dismiss)
