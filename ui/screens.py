@@ -35,8 +35,6 @@ class StatisticsScreen(Screen):
 class DataManagementScreen(Screen):
     pass
 
-class RecurringScreen(Screen):
-    pass
 
 class ManageTransactionsScreen(Screen):
     pass
@@ -96,7 +94,10 @@ class AddRecentTransactionRow(ClickableTransactionRow):
 
 class RecurringRow(BoxLayout):
 
-    text = StringProperty("")
+    category = StringProperty("")
+    amount = StringProperty("")
+    day = StringProperty("")
+    last_added = StringProperty("")
     index = NumericProperty(0)
     
 
@@ -105,6 +106,16 @@ class CategoryRow(BoxLayout):
     text = StringProperty("")
 
     category_id = NumericProperty(0)
+
+class StatisticsRow(BoxLayout):
+
+    category = StringProperty("")
+
+    total = StringProperty("")
+
+    months = StringProperty("")
+
+    average = StringProperty("")
 
     
     

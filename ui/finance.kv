@@ -111,7 +111,7 @@
     font_size: app.metrics.Font.NORMAL
 
     background_normal: ""
-    background_color: app.metrics.Color.SURFACE
+    background_color: app.metrics.Color.PRIMARY
 
     color: app.metrics.Color.TEXT_PRIMARY
 
@@ -1011,6 +1011,30 @@
 		            on_text:
 		                app.update_sort(self.text)
 
+
+    	# Undo Delete
+        BoxLayout:
+
+		    size_hint_y: None
+
+		    height: dp(48) if app.show_undo else 0
+
+		    opacity: 1 if app.show_undo else 0
+
+		    spacing: dp(8)
+
+		    Label:
+		        text: "Transaction deleted"
+
+		    AppPrimaryButton:
+		        text: "Undo"
+
+		        size_hint_x: None
+
+		        width: dp(90)
+
+		        on_press:
+		            app.undo_delete()
         
         # History Transaction List
         Card:
@@ -1111,158 +1135,381 @@
             on_press:
                 app.go_to_screen("history")
                 
-<StatisticsScreen>:
+<StatisticsRow>
+
+    size_hint_y: None
+    height: dp(90)
+
+    padding: dp(12)
+    spacing: dp(8)
+
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
 
     BoxLayout:
         orientation: "vertical"
 
+        Label:
+            text: root.category
+            bold: True
+            halign: "left"
+            text_size: self.size
+
+        Label:
+            text: "Total: " + root.total
+            halign: "left"
+            text_size: self.size
+
+        Label:
+            text: "Months: " + root.months + "    Avg/Month: " + root.average
+            color: app.metrics.Color.TEXT_SECONDARY
+            font_size: app.metrics.Font.SMALL
+            halign: "left"
+            text_size: self.size
+
+
+<StatisticsScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
+
         ScrollView:
 
-            Label:
-                text: app.category_statistics()
-
-                text_size: self.width, None
-
+            BoxLayout:
+                orientation: "vertical"
                 size_hint_y: None
+                height: self.minimum_height
+                spacing: app.metrics.Spacing.NORMAL
 
-                height: self.texture_size[1]
+                Card:
+                    size_hint_y: None
+                    height: dp(120)
 
-        
-        
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Overview"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(30)
+
+                        Label:
+                            text: "Balance: " + app.stats_balance
+
+                        Label:
+                            text: "Income: " + app.stats_income
+
+                        Label:
+                            text: "Expense: " + app.stats_expense
+
+                        Label:
+                            text: "Transactions: " + app.stats_transactions
+
+                Card:
+                    size_hint_y: None
+                    height: dp(120)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Highlights"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(30)
+
+                        Label:
+                            text: "Highest Income: " + app.stats_highest_income
+
+                        Label:
+                            text: "Highest Expense: " + app.stats_highest_expense
+
+                        Label:
+                            text: "Top Category: " + app.stats_top_category
+
+                        Label:
+                            text: "Expense Categories: " + app.stats_category_count
+
+                Card:
+                    size_hint_y: None
+                    height: dp(48)
+
+                    Label:
+                        text: "Category Statistics"
+                        bold: True
+
+                RecycleView:
+                    size_hint_y: None
+                    height: max(dp(120),len(app.statistics_data) * dp(94))
+
+                    viewclass: "StatisticsRow"
+
+                    data: app.statistics_data
+
+                    RecycleBoxLayout:
+                        default_size: None, dp(90)
+                        default_size_hint: 1, None
+                        size_hint_y: None
+                        height: self.minimum_height
+                        orientation: "vertical"
+                        spacing: dp(8)
+
         BottomNav:
 
 <DataManagementScreen>:
 
     BoxLayout:
         orientation: "vertical"
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
+
+        # -------------------------
+        # Header
+        # -------------------------
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.DATABASE
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
+
+            Label:
+                text: "Data Management"
+                bold: True
+                font_size: app.metrics.Font.TITLE
+                halign: "left"
+                text_size: self.size
 
         ScrollView:
 
-            Label:
-                text: " Data Management"
-
-                text_size: self.width, None
-
+            BoxLayout:
+                orientation: "vertical"
                 size_hint_y: None
+                height: self.minimum_height
+                spacing: app.metrics.Spacing.NORMAL
 
-                height: self.texture_size[1]
-        
-        Label:
-            text:"Current Database:" + app.current_database
-            
-            size_hint_y: None
-            height:80
-            
-        Label:
-            text:"Available Databases"
-        
-            size_hint_y:None
-            height:40
-        
-        RecycleView:
-            viewclass: "DatabaseRow"
-            data: app.database_data
-        
-            RecycleBoxLayout:
-                default_size: None,50
-                default_size_hint:1,None
-            
-                size_hint_y:None 
-                height:self.minimum_height
-                orientation:"vertical"
-        
-        AppButton:
-            text: "Create New Database"
-            on_press:app.create_database_popup()        
-        
-                
-        AppButton:
-            text: "Backup Data"
+                # -------------------------
+				# Current Database
+				# -------------------------
+				Card:
+				    size_hint_y: None
+				    height: dp(85)
 
-            size_hint_y: .15
+				    BoxLayout:
+				        orientation: "vertical"
 
-            on_press:
-                app.backup_data()
-        
-        AppButton:
-            text: "Import Database"
-            size_hint_y: .15
-            on_press: app.show_import_popup()
-        
-        AppDangerButton:
-            text: "clear Data"
+				        Label:
+				            text: "Current Database"
 
-            size_hint_y: .15
+				            bold: True
 
-            on_press:
-                app.clear_all_data()
-        
-        AppButton:
-            text: "Export CSV"
-            size_hint_y: None
-            #height: 60
-            on_press: app.export_csv()
-                
-        
+				            size_hint_y: None
+				            height: dp(26)
+
+				        Label:
+				            text: app.current_database
+
+				            font_size: app.metrics.Font.CARD_VALUE
+
+				            bold: True
+
+				            halign: "center"
+				            valign: "middle"
+
+            				text_size: self.size
+	                        
+	
+	
+
+                # -------------------------
+                # Databases
+                # -------------------------
+                Card:
+                    size_hint_y: None
+                    height: dp(320)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Available Databases"
+
+                            bold: True
+
+                            size_hint_y: None
+                            height: dp(40)
+
+                        RecycleView:
+
+                            viewclass: "DatabaseRow"
+
+                            data: app.database_data
+
+                            RecycleBoxLayout:
+
+                                default_size: None, dp(50)
+                                default_size_hint: 1,None
+
+                                size_hint_y: None
+                                height: self.minimum_height
+
+                                orientation: "vertical"
+
+                        Widget:
+						    size_hint_y: None
+						    height: dp(10)
+
+		                AppPrimaryButton:
+		                    text: "Create New Database"
+
+		                    on_press:
+		                        app.create_database_popup()
+
+                # -------------------------
+                # Backup
+                # -------------------------
+                Card:
+                    size_hint_y: None
+                    height: dp(170)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Backup & Restore"
+
+                            bold: True
+
+                            size_hint_y: None
+                            height: dp(36)
+
+                        AppButton:
+						    markup: True
+
+						    text:
+						        f"[font=MaterialIcons]{app.icons.BACKUP}[/font]  Backup Database"
+
+						    on_press:
+						        app.backup_data()
+
+
+						AppButton:
+						    markup: True
+
+						    text:
+						        f"[font=MaterialIcons]{app.icons.IMPORT}[/font]  Import Database"
+
+						    on_press:
+						        app.show_import_popup()
+
+
+						AppButton:
+						    markup: True
+
+						    text:
+						        f"[font=MaterialIcons]{app.icons.EXPORT}[/font]  Export CSV"
+
+						    on_press:
+						        app.export_csv()
+
+                # -------------------------
+                # Danger Zone
+                # -------------------------
+                Card:
+                    size_hint_y: None
+                    height: dp(110)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Danger Zone"
+
+                            color: app.metrics.Color.EXPENSE
+
+                            bold: True
+
+                            size_hint_y: None
+                            height: dp(36)
+
+                        AppDangerButton:
+                            text: "Clear All Transactions"
+
+                            on_press:
+                                app.clear_all_data()
+
         BottomNav:
 
-
-<RecurringScreen>
-
-    BoxLayout:
-        orientation: "vertical"
-        padding: 10
-        spacing: 10
-
-        AppTextInput:
-            id: amount
-            hint_text: "Amount"
-
-        AppSpinner:
-            id: category
-            text: "Food"
-
-            values: app.categories
-
-        AppTextInput:
-            id: day
-            hint_text: "Day Of Month"
-
-        Label:
-            text: "Example: 24 = 24th of every month"
-            size_hint_y: None
-            height: 30
-
-        AppPrimaryButton:
-            text: "Add Recurring Expense"
-
-            on_press:
-                app.add_recurring(amount.text,category.text,day.text)
-        
-        BottomNav:
 
 <DatabaseRow@BoxLayout>
+
     db_name: ""
+
+    size_hint_y: None
+    height: dp(56)
+
+    padding: [12,0]
+
+    spacing: dp(6)
+
+    canvas.before:
+        Color:
+            rgba:app.metrics.Color.PRIMARY if root.db_name == app.current_database else app.metrics.Color.SURFACE
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
     Label:
-        text: root.db_name
-   
-    AppIconButton:
-	    font_size: app.metrics.Font.NORMAL
-	    text: f"[font=MaterialIcons]{app.icons.OPEN}[/font]"
-	    size_hint_x: .25
-        on_press:app.switch_database(root.db_name)
+
+        text:
+            root.db_name + (
+            "   (Current)"
+            if root.db_name == app.current_database
+            else ""
+            )
+
+        bold:
+            root.db_name == app.current_database
+
+        halign: "left"
+
+        valign: "middle"
+
+        text_size: self.size
 
     AppIconButton:
-	    font_size: app.metrics.Font.NORMAL
-	    text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
-        size_hint_x:.25
+        text:
+            f"[font=MaterialIcons]{app.icons.OPEN}[/font]"
+
+        on_press:
+            app.switch_database(root.db_name)
+
+    AppIconButton:
+        text:
+            f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+
         on_press:
             app.rename_database_popup(root.db_name)
-    
+
     AppIconButton:
-	    font_size: app.metrics.Font.NORMAL
-	    text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
-        size_hint_x: .25
+        text:
+            f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+
         on_press:
             app.delete_database_popup(root.db_name)
 
@@ -1305,104 +1552,222 @@
 <RecurringRow>
 
     size_hint_y: None
-    height: 100
+    height: dp(96)
 
-    Label:
-        text: root.text
-    
-    AppButton:
-        text: "Edit"
-        size_hint_x: .3
-        on_press:app.edit_recurring(root.index)
+    padding: [12,8]
+    spacing: 8
 
-    AppDangerButton:
-        text: "Delete"
-        size_hint_x: .3
-        on_press:app.delete_recurring(root.index)
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    BoxLayout:
+        orientation: "vertical"
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(24)
+
+            Label:
+                text: root.category
+                bold: True
+                halign: "left"
+                text_size: self.size
+
+            Label:
+                text: root.amount
+                bold: True
+                halign: "right"
+                text_size: self.size
+
+        Label:
+            text: root.day
+            color: app.metrics.Color.TEXT_SECONDARY
+            halign: "left"
+            text_size: self.size
+
+        Label:
+            text: "Last Added: " + root.last_added
+            color: app.metrics.Color.TEXT_SECONDARY
+            font_size: app.metrics.Font.SMALL
+            halign: "left"
+            text_size: self.size
+
+    AnchorLayout:
+        anchor_x: "right"
+        anchor_y: "center"
+        size_hint_x: None
+        width: dp(70)
+
+        BoxLayout:
+            size_hint: None,None
+            size: dp(64),dp(28)
+            spacing: dp(8)
+
+            AppIconButton:
+                text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+
+                on_press:
+                    app.edit_recurring(root.index)
+
+            AppIconButton:
+                text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+
+                on_press:
+                    app.delete_recurring(root.index)
 
 # dashboard->manage transaction-> manage recuring screen
 <ManageRecurringScreen>
 
     BoxLayout:
         orientation: "vertical"
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
 
-        RecycleView:
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
 
-            viewclass: "RecurringRow"
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.REPEAT
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
 
-            data:
-                app.recurring_data
+            Label:
+                text: "Recurring Transactions"
+                bold: True
+                font_size: app.metrics.Font.TITLE
+                halign: "left"
+                text_size: self.size
 
-            RecycleBoxLayout:
-                default_size: None, 100
-                default_size_hint: 1, None
-                size_hint_y: None
-                height: self.minimum_height
-                orientation: "vertical"
+        Card:
 
-        
-        
+            RecycleView:
+
+                viewclass: "RecurringRow"
+
+                data: app.recurring_data
+
+                RecycleBoxLayout:
+
+                    default_size: None, dp(100)
+                    default_size_hint: 1,None
+
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    orientation: "vertical"
+
+                    spacing: dp(8)
+
         BottomNav:
 
 <CategoryScreen>
 
     BoxLayout:
         orientation: "vertical"
-        padding: 10
-        spacing: 10
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
 
-        AppTextInput:
-            id: category_name
-            hint_text: "New Category"
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
 
-        AppButton:
-            text: "Add Category"
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.CATEGORY
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
 
-            on_press:
-                app.add_category(category_name.text)
+            Label:
+                text: "Categories"
+                bold: True
+                font_size: app.metrics.Font.TITLE
+                halign: "left"
+                text_size: self.size
 
-        RecycleView:
+        Card:
+            size_hint_y: None
+            height: dp(120)
 
-            viewclass: "CategoryRow"
+            spacing: app.metrics.Spacing.NORMAL
 
-            data: app.category_data
+            AppTextInput:
+                id: category_name
+                hint_text: "New Category"
 
-            RecycleBoxLayout:
+            AppPrimaryButton:
+                text: "Add Category"
 
-                default_size: None, 60
-                default_size_hint: 1, None
+                on_press:
+                    app.add_category(category_name.text)
 
-                size_hint_y: None
+        Card:
 
-                height: self.minimum_height
+            RecycleView:
 
-                orientation: "vertical"
-               
-        
-        
+                viewclass: "CategoryRow"
+
+                data: app.category_data
+
+                RecycleBoxLayout:
+
+                    default_size: None, dp(56)
+                    default_size_hint: 1, None
+
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    orientation: "vertical"
+
         BottomNav:
 
+
 <CategoryRow>
+
+    size_hint_y: None
+    height: dp(56)
+
+    padding: [12,0]
+    spacing: dp(8)
+
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
 
     Label:
         text: root.text
 
-    AppButton:
-        markup: True
-		font_size: app.metrics.Font.NORMAL
-		text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+        bold: True
 
-        size_hint_x: .2
+        halign: "left"
+        valign: "middle"
+
+        text_size: self.size
+
+    AppIconButton:
+
+        text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
 
         on_press:
             app.edit_category(root.category_id,root.text)
 
-    AppDangerButton:
-        markup: True
-		font_size: app.metrics.Font.NORMAL
-		text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+    AppIconButton:
 
-        size_hint_x: .2
+        text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
 
         on_press:
             app.delete_category(root.category_id)
@@ -1434,12 +1799,6 @@
         background_color: (app.metrics.Color.NAV_ACTIVE) if app.current_screen == "history" else (app.metrics.Color.NAV_INACTIVE)
         on_press: app.go_to_screen("history")
 
-    Button:
-        markup: True
-        text: f"[font=MaterialIcons]{app.icons.REPEAT}[/font]\nRepeat"
-        font_size: app.metrics.Font.NAVIGATION
-        background_color: app.metrics.Color.NAV_ACTIVE if app.current_screen == "recurring" else (app.metrics.Color.NAV_INACTIVE)
-        on_press: app.go_to_screen("recurring")
 
     Button:
         markup: True

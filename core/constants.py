@@ -47,13 +47,32 @@ REQUIRED_SCHEMA = {
 
 
 def get_backup_dir():
+    import os
+
     try:
         from android.storage import primary_external_storage_path
 
         return os.path.join(
             primary_external_storage_path(),
             DOWNLOAD_FOLDER_NAME,
-            BACKUP_FOLDER_NAME
+            BACKUP_FOLDER_NAME,
         )
+
+    except ImportError:
+        # Desktop (Windows/Linux/macOS)
+        return os.path.join(
+            os.path.expanduser("~"),
+            "AppData",
+            "Roaming",
+            APP_NAME,
+            "backups",
+        )
+
     except Exception:
-        return BACKUP_DIR_FALLBACK
+        return os.path.join(
+            os.path.expanduser("~"),
+            "AppData",
+            "Roaming",
+            APP_NAME,
+            "backups",
+        )

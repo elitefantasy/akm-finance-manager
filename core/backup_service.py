@@ -1,17 +1,26 @@
 import os
 import shutil
 
-from core.constants import get_backup_dir
 from core.database import DatabaseManager
 
+from kivy.app import App
 
-BACKUP_DIR = get_backup_dir()
 
 
-def backup_database(source_path, database_name, backup_dir=BACKUP_DIR):
+
+def backup_database(source_path, database_name, backup_dir=None):
+    if backup_dir is None:
+        backup_dir = os.path.join(
+            App.get_running_app().user_data_dir,
+            "backups",
+        )
+
     os.makedirs(backup_dir, exist_ok=True)
 
-    destination = os.path.join(backup_dir, database_name)
+    destination = os.path.join(
+        backup_dir,
+        database_name,
+    )
 
     shutil.copy2(source_path, destination)
 
@@ -21,12 +30,25 @@ def backup_database(source_path, database_name, backup_dir=BACKUP_DIR):
 def import_database_file(
     filename,
     user_data_dir,
-    backup_dir=BACKUP_DIR
-):
+    backup_dir=None,):
+
+    if backup_dir is None:
+        backup_dir = os.path.join(
+            App.get_running_app().user_data_dir,
+            "backups",
+        )
+
     db_name = normalize_database_filename(filename)
 
-    source = os.path.join(backup_dir, db_name)
-    destination = os.path.join(user_data_dir, db_name)
+    source = os.path.join(
+        backup_dir,
+        db_name,
+    )
+
+    destination = os.path.join(
+        user_data_dir,
+        db_name,
+    )
 
     if not os.path.exists(source):
         return False, "Database not found", db_name
@@ -46,20 +68,20 @@ def import_database_file(
     return True, "", db_name
 
 
-def list_backup_databases(backup_dir=BACKUP_DIR):
+
+
+def list_backup_databases(backup_dir=None):
+    if backup_dir is None:
+        backup_dir = os.path.join(
+            App.get_running_app().user_data_dir,
+            "backups",
+        )
+
     if not os.path.exists(backup_dir):
         return []
 
     return sorted(
-        filename for filename in os.listdir(backup_dir)
+        filename
+        for filename in os.listdir(backup_dir)
         if filename.endswith(".db")
     )
-
-
-def normalize_database_filename(filename):
-    db_name = filename.strip()
-
-    if not db_name.endswith(".db"):
-        db_name += ".db"
-
-    return db_name

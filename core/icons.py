@@ -34,3 +34,9 @@ class Icons:
     MEDICAL = "\ueb32"
     EDUCATION = "\ue80c"
     OTHER = "\ue896"
+
+
+    # Data Management
+    BACKUP = "\U0000E2C6"   # backup
+    IMPORT = "\U0000E2C3"   # file_download
+    EXPORT = "\U0000E2C4"   # file_upload

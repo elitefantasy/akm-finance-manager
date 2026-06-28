@@ -104,6 +104,23 @@ class FinanceManagerApp(App):
     recurring_data = ListProperty([])
     database_data = ListProperty([])
 
+    statistics_data = ListProperty([])
+
+    stats_balance = StringProperty("₹0")
+    stats_income = StringProperty("₹0")
+    stats_expense = StringProperty("₹0")
+    stats_transactions = StringProperty("0")
+
+    stats_highest_income = StringProperty("₹0")
+    stats_highest_expense = StringProperty("₹0")
+    stats_top_category = StringProperty("None")
+    stats_category_count = StringProperty("0")
+
+    last_deleted_transaction = None
+    show_undo = BooleanProperty(False)
+
+
+
 
     def log(self, message):
 
@@ -192,7 +209,6 @@ class FinanceManagerApp(App):
         sm.add_widget(EditTransactionScreen(name="edit"))
         sm.add_widget(StatisticsScreen(name="statistics"))
         sm.add_widget(DataManagementScreen(name="datamanagement"))
-        sm.add_widget(RecurringScreen(name="recurring"))
         sm.add_widget(ManageTransactionsScreen(name="manage_transactions"))
         sm.add_widget(ManageRecurringScreen(name="manage_recurring"))
         sm.add_widget(CategoryScreen(name="categories"))
@@ -243,6 +259,8 @@ class FinanceManagerApp(App):
     def update_sort(self, value):
         self.sort_mode = value
         self.refresh_transaction_view()
+
+
     
     def delete_transaction(self,transaction_id):
         
@@ -255,16 +273,61 @@ class FinanceManagerApp(App):
             )
         )
     
-    def confirm_delete(self,transaction_id):
-        self.transactions = [
-            t for t in self.transactions
-            if t["id"] != transaction_id
-        ]
+    def confirm_delete(self, transaction_id):
 
-        
+        transaction = next(
+            (
+                t for t in self.transactions
+                if t["id"] == transaction_id
+            ),
+            None
+        )
+
+        if not transaction:
+            return
+
+        self.last_deleted_transaction = transaction.copy()
+
+        self.transactions.remove(transaction)
+
         self.db.delete_transaction_db(transaction_id)
-        
+
+        self.show_undo = True
+
+        Clock.unschedule(self.hide_undo)
+
+        Clock.schedule_once(
+            self.hide_undo,
+            5
+        )
+
         self.update_dashboard()
+
+    def undo_delete(self):
+
+        if not self.last_deleted_transaction:
+            return
+
+        transaction = self.last_deleted_transaction.copy()
+
+        transaction.pop("id", None)
+
+        transaction["id"] = self.db.save_transaction_db(transaction)
+
+        self.transactions.append(transaction)
+
+        self.last_deleted_transaction = None
+
+        self.show_undo = False
+
+        self.update_dashboard()
+
+
+    def hide_undo(self, dt):
+
+        self.last_deleted_transaction = None
+
+        self.show_undo = False
     
     
     def category_report(self):
@@ -431,6 +494,7 @@ class FinanceManagerApp(App):
         self.refresh_add_screen_history()
         self.top_category_text = self.top_category()
         self.monthly_expense_text = self.monthly_expense()
+        self.refresh_statistics()
 
         
     
@@ -610,23 +674,77 @@ class FinanceManagerApp(App):
     
 
 
-    def category_statistics(self):
-        return reports.category_statistics(self.transactions)
+    def refresh_statistics(self):
+
+        stats = reports.statistics_data(
+            self.transactions
+        )
+
+        self.stats_balance = (
+            f"₹{stats['balance']:,.0f}"
+        )
+
+        self.stats_income = (
+            f"₹{stats['income']:,.0f}"
+        )
+
+        self.stats_expense = (
+            f"₹{stats['expense']:,.0f}"
+        )
+
+        self.stats_transactions = str(
+            stats["transactions"]
+        )
+
+        self.stats_highest_income = (
+            f"₹{stats['highest_income']:,.0f}"
+        )
+
+        self.stats_highest_expense = (
+            f"₹{stats['highest_expense']:,.0f}"
+        )
+
+        self.stats_top_category = (
+            stats["top_category"]
+        )
+
+        self.stats_category_count = str(
+            stats["category_count"]
+        )
+
+        self.statistics_data = []
+
+        for item in stats["categories"]:
+
+            self.statistics_data.append({
+
+                "category": item["category"],
+
+                "total":
+                    f"₹{item['total']:,.0f}",
+
+                "months":
+                    str(item["months"]),
+
+                "average":
+                    f"₹{item['average']:,.0f}",
+            })
     
 
     def backup_data(self):
     
         try:
-            backup_service.backup_database(
+            backup_path = backup_service.backup_database(
                 self.db.db_path,
                 self.current_database
             )
 
-            self.log(f"Backup created: {self.current_database}")
-    
+            backup_path = os.path.abspath(backup_path)
+
             DialogManager.show_message(
-                "Success",
-                f"{self.current_database} backed up"
+                "Backup Successful",
+                f"{self.current_database} backed up successfully.\n\n"
+                f"Location:\n{backup_path}"
             )
     
         except Exception as e:
@@ -953,53 +1071,74 @@ class FinanceManagerApp(App):
     
     def refresh_recurring_view(self):
 
-        data = []
+        self.recurring_data = []
 
-        for i, r in enumerate(
-            self.recurring_transactions
-        ):
+        for i, recurring in enumerate(self.recurring_transactions):
 
-            data.append({
+            self.recurring_data.append({
 
-                "text":
-                f"₹{r['amount']}\n"
-                f"{r['category']}\n"
-                f"Day {r['day']}",
+                "index": i,
 
-                "index": i
+                "id": recurring["id"],
+
+                "category": recurring["category"],
+
+                "amount": f"₹{recurring['amount']:,.0f}",
+
+                "day": f"Repeats every month • Day {recurring['day']}",
+
+                "last_added": recurring["last_added"] or "Never",
             })
 
-        self.recurring_data = data
-    
-    def save_recurring_edit(self,index,amount,category,day,popup):
+    def save_recurring_edit(
+        self,
+        index,
+        amount,
+        category,
+        day,
+        popup
+    ):
+
         try:
+
             amount = float(amount)
             day = int(day)
+
             if not 1 <= day <= 31:
                 raise Exception
+
         except:
+
+            DialogManager.show_message(
+                "Invalid Input",
+                "Enter a valid amount and day (1-31)"
+            )
+
             return
 
-        recurring = (
-            self.recurring_transactions[index]
-        )
+        recurring = self.recurring_transactions[index]
 
         recurring["amount"] = amount
         recurring["category"] = category
         recurring["day"] = day
-        
+
         self.db.update_recurring_db(
             recurring["id"],
-        {
-            "amount": amount,
-            "category": category,
-            "day": day
-        }
+            {
+                "amount": amount,
+                "category": category,
+                "day": day,
+            }
         )
 
         self.refresh_recurring_view()
 
         popup.dismiss()
+
+        DialogManager.show_message(
+            "Success",
+            "Recurring transaction updated."
+        )
 
         
     
@@ -1007,18 +1146,28 @@ class FinanceManagerApp(App):
 
         if (
             index < 0
-            or index >= len(
-                self.recurring_transactions
-            )
+            or index >= len(self.recurring_transactions)
         ):
             return
 
-        recurring = (
-            self.recurring_transactions.pop(index))
-        
+        DialogManager.confirm(
+            "Delete Recurring Transaction",
+            "Delete this recurring transaction?",
+            lambda: self.confirm_delete_recurring(index)
+        )
+
+    def confirm_delete_recurring(self, index):
+
+        recurring = self.recurring_transactions.pop(index)
+
         self.db.delete_recurring_db(recurring["id"])
 
         self.refresh_recurring_view()
+
+        DialogManager.show_message(
+            "Success",
+            "Recurring transaction deleted."
+        )
     
     
     def edit_recurring(self, index):
@@ -1084,34 +1233,45 @@ class FinanceManagerApp(App):
         )
    
     def add_category(self, name):
+
         name = name.strip()
 
         if not name:
+
             DialogManager.show_message(
                 "Error",
                 "Enter category name"
             )
+
             return
-           
 
         if name in self.categories:
+
             DialogManager.show_message(
-                "error",
-                "category already exists"
+                "Error",
+                "Category already exists"
             )
+
             return
-           
 
         self.db.save_category_db(name)
-        
+
         self.categories = self.db.load_categories_db()
-        
+
         self.refresh_categories()
-        
+
+        self.root.get_screen(
+            "categories"
+        ).ids.category_name.text = ""
+
+        self.root.get_screen(
+            "categories"
+        ).ids.category_name.focus = True
+
         DialogManager.show_message(
-                "Success",
-                "Category Added"
-            )
+            "Success",
+            "Category Added"
+        )
            
     
     def refresh_categories(self):
@@ -1150,24 +1310,53 @@ class FinanceManagerApp(App):
         except:
             pass
         
-        try:
-            spinner = self.root.get_screen(
-                "recurring"
-            ).ids.category
-            spinner.values = self.categories
-            
-            if spinner.text not in self.categories:
-                spinner.text = self.categories[0]
-                
-        except:
-            pass
     
-    def delete_category(self,category_id):
+    def delete_category(self, category_id):
+
+        if len(self.categories) <= 1:
+
+            DialogManager.show_message(
+                "Error",
+                "At least one category is required."
+            )
+
+            return
+
+        category_name = next(
+            (
+                c["text"]
+                for c in self.category_data
+                if c["category_id"] == category_id
+            ),
+            None
+        )
+
+        if any(
+            t["category"] == category_name
+            for t in self.transactions
+        ):
+
+            DialogManager.show_message(
+                "Error",
+                "Category is used by existing transactions."
+            )
+
+            return
+
+        DialogManager.confirm(
+            "Delete Category",
+            f"Delete '{category_name}'?",
+            lambda: self.confirm_delete_category(
+                category_id
+            )
+        )
+
+    def confirm_delete_category(self, category_id):
 
         self.db.delete_category_db(category_id)
 
         self.categories = self.db.load_categories_db()
-        
+
         self.refresh_categories()
     
     def edit_category(self, category_id, old_name):

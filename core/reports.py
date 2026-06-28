@@ -1,214 +1,281 @@
+from collections import defaultdict
 from datetime import datetime
 
 
-def category_report(transactions):
-    report = _expense_totals_by_category(transactions)
+def expense_summary(transactions):
+    income = sum(
+        t["amount"]
+        for t in transactions
+        if t["type"] == "Income"
+    )
 
-    result = ""
+    expense = sum(
+        t["amount"]
+        for t in transactions
+        if t["type"] == "Expense"
+    )
 
-    for category, amount in report.items():
-        result += f"{category}: ₹{amount}\n"
-
-    if result == "":
-        result = "no expense data available"
-
-    return result
+    return (
+        f"Income : ₹{income:,.0f}\n"
+        f"Expense : ₹{expense:,.0f}\n"
+        f"Balance : ₹{income-expense:,.0f}"
+    )
 
 
 def top_category(transactions):
-    categories = _expense_totals_by_category(transactions)
 
-    if not categories:
+    totals = defaultdict(float)
+
+    for t in transactions:
+
+        if t["type"] == "Expense":
+            totals[t["category"]] += t["amount"]
+
+    if not totals:
         return "None"
 
-    return max(categories, key=categories.get)
+    return max(
+        totals,
+        key=totals.get
+    )
 
 
 def monthly_expense(transactions):
-    month = datetime.now().month
+
+    now = datetime.now()
 
     total = 0
 
-    for transaction in transactions:
-        if transaction["type"] == "Expense":
+    for t in transactions:
+
+        if t["type"] != "Expense":
+            continue
+
+        try:
             date = datetime.strptime(
-                transaction["date"],
+                t["date"],
                 "%d-%m-%Y %H:%M"
             )
 
-            if date.month == month:
-                total += transaction["amount"]
+            if (
+                date.month == now.month
+                and date.year == now.year
+            ):
+                total += t["amount"]
+
+        except Exception:
+            continue
 
     return f"₹{total:,.0f}"
 
 
-def expense_summary(transactions):
-    summary = _expense_totals_by_category(transactions)
+def category_report(transactions):
 
-    result = ""
+    totals = defaultdict(float)
 
-    for category, amount in summary.items():
-        result += f"{category}: ₹{amount}\n"
+    for t in transactions:
 
-    return result
+        if t["type"] == "Expense":
+            totals[t["category"]] += t["amount"]
+
+    if not totals:
+        return "No expense data."
+
+    lines = []
+
+    for category, amount in sorted(totals.items()):
+
+        lines.append(
+            f"{category}: ₹{amount:,.0f}"
+        )
+
+    return "\n".join(lines)
 
 
-def category_statistics(transactions):
+# =====================================================
+# Statistics
+# =====================================================
+
+def statistics_data(transactions):
+
     stats = {}
 
-    for transaction in transactions:
-        if transaction["type"] != "Expense":
-            continue
-
-        category = transaction["category"]
-
-        if category not in stats:
-            stats[category] = {
-                "total": 0,
-                "months": set()
-            }
-
-        stats[category]["total"] += transaction["amount"]
-
-        date_obj = datetime.strptime(
-            transaction["date"],
-            "%d-%m-%Y %H:%M"
-        )
-
-        month_key = f"{date_obj.year}-{date_obj.month}"
-
-        stats[category]["months"].add(month_key)
-
-    expenses = [
-        transaction for transaction in transactions
-        if transaction["type"] == "Expense"
-    ]
-
-    incomes = [
-        transaction for transaction in transactions
-        if transaction["type"] == "Income"
-    ]
-
-    highest_expense = (
-        max(expenses, key=lambda transaction: transaction["amount"])
-        if expenses else None
-    )
-
-    highest_income = (
-        max(incomes, key=lambda transaction: transaction["amount"])
-        if incomes else None
-    )
-
-    avg_expense = (
-        sum(transaction["amount"] for transaction in expenses)
-        / len(expenses)
-        if expenses else 0
-    )
-
-    avg_income = (
-        sum(transaction["amount"] for transaction in incomes)
-        / len(incomes)
-        if incomes else 0
-    )
-
-    result = (
-        "📊 FINANCE STATISTICS\n\n"
-        f"Total Transactions: "
-        f"{len(transactions)}\n\n"
-    )
-
-    if highest_expense:
-        result += (
-            "Highest Expense:\n"
-            f"{highest_expense['category']} "
-            f"₹{highest_expense['amount']:.0f}\n\n"
-        )
-
-    if highest_income:
-        result += (
-            "Highest Income:\n"
-            f"{highest_income['category']} "
-            f"₹{highest_income['amount']:.0f}\n\n"
-        )
-
-    result += (
-        f"Average Expense: "
-        f"₹{avg_expense:.0f}\n"
-        f"Average Income: "
-        f"₹{avg_income:.0f}\n"
-        f"Expense Categories: "
-        f"{len(stats)}\n\n"
-        "-----------------------------\n\n"
-    )
-
-    for category, data in stats.items():
-        total = data["total"]
-        months = len(data["months"])
-
-        avg_monthly = (
-            total / months
-            if months else 0
-        )
-
-        result += (
-            f"{category}\n"
-            f"Total Expense: ₹{total:.0f}\n"
-            f"Months Active: {months}\n"
-            f"Average Monthly Expense: "
-            f"₹{avg_monthly:.0f}\n\n"
-        )
-
-    return result
-
-
-def _expense_totals_by_category(transactions):
-    totals = {}
-
-    for transaction in transactions:
-        if transaction["type"] == "Expense":
-            category = transaction["category"]
-            totals[category] = (
-                totals.get(category, 0)
-                + transaction["amount"]
-            )
-
-    return totals
-
-def highest_expense(transactions):
-    expenses = [
-        t for t in transactions
-        if t["type"] == "Expense"
-    ]
-
-    if not expenses:
-        return "None", "₹0"
-
-    highest = max(
-        expenses,
-        key=lambda t: t["amount"]
-    )
-
-    return (
-        highest["category"],
-        f"₹{highest['amount']:.0f}"
-    )
-
-
-def highest_income(transactions):
-    incomes = [
+    income = [
         t for t in transactions
         if t["type"] == "Income"
     ]
 
-    if not incomes:
-        return "None", "₹0"
+    expense = [
+        t for t in transactions
+        if t["type"] == "Expense"
+    ]
 
-    highest = max(
-        incomes,
-        key=lambda t: t["amount"]
+    stats["balance"] = (
+        sum(t["amount"] for t in income)
+        - sum(t["amount"] for t in expense)
     )
 
-    return (
-        highest["category"],
-        f"₹{highest['amount']:.0f}"
+    stats["income"] = sum(
+        t["amount"]
+        for t in income
     )
+
+    stats["expense"] = sum(
+        t["amount"]
+        for t in expense
+    )
+
+    stats["transactions"] = len(
+        transactions
+    )
+
+    stats["highest_income"] = (
+        max(
+            (t["amount"] for t in income),
+            default=0
+        )
+    )
+
+    stats["highest_expense"] = (
+        max(
+            (t["amount"] for t in expense),
+            default=0
+        )
+    )
+
+    stats["top_category"] = top_category(
+        transactions
+    )
+
+    category_data = {}
+
+    for t in expense:
+
+        category = t["category"]
+
+        if category not in category_data:
+
+            category_data[category] = {
+                "total": 0,
+                "months": set(),
+            }
+
+        category_data[category]["total"] += t["amount"]
+
+        try:
+
+            date = datetime.strptime(
+                t["date"],
+                "%d-%m-%Y %H:%M"
+            )
+
+            category_data[category]["months"].add(
+                (
+                    date.month,
+                    date.year,
+                )
+            )
+
+        except Exception:
+            pass
+
+    categories = []
+
+    for category, values in sorted(
+        category_data.items()
+    ):
+
+        months = max(
+            1,
+            len(values["months"])
+        )
+
+        categories.append({
+
+            "category": category,
+
+            "total": values["total"],
+
+            "months": months,
+
+            "average": (
+                values["total"] / months
+            ),
+
+        })
+
+    stats["categories"] = categories
+
+    stats["category_count"] = len(
+        categories
+    )
+
+    return stats
+
+
+# backward compatibility
+def category_statistics(transactions):
+
+    stats = statistics_data(
+        transactions
+    )
+
+    if stats["transactions"] == 0:
+
+        return (
+            "No transaction data available."
+        )
+
+    result = []
+
+    result.append(
+        f"Balance : ₹{stats['balance']:,.0f}"
+    )
+
+    result.append(
+        f"Income : ₹{stats['income']:,.0f}"
+    )
+
+    result.append(
+        f"Expense : ₹{stats['expense']:,.0f}"
+    )
+
+    result.append(
+        f"Transactions : {stats['transactions']}"
+    )
+
+    result.append(
+        f"Highest Income : ₹{stats['highest_income']:,.0f}"
+    )
+
+    result.append(
+        f"Highest Expense : ₹{stats['highest_expense']:,.0f}"
+    )
+
+    result.append(
+        f"Top Category : {stats['top_category']}"
+    )
+
+    result.append("")
+
+    for category in stats["categories"]:
+
+        result.append(
+            f"{category['category']}"
+        )
+
+        result.append(
+            f"  Total : ₹{category['total']:,.0f}"
+        )
+
+        result.append(
+            f"  Months : {category['months']}"
+        )
+
+        result.append(
+            f"  Avg / Month : ₹{category['average']:,.0f}"
+        )
+
+        result.append("")
+
+    return "\n".join(result)

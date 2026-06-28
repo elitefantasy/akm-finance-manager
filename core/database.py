@@ -81,7 +81,7 @@ class DatabaseManager:
     def create_database(self):
 
         cursor = self.conn.cursor()
-    
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS transactions(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -92,7 +92,7 @@ class DatabaseManager:
             date TEXT
         )
         """)
-    
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS recurring_transactions(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,10 +102,10 @@ class DatabaseManager:
             last_added TEXT
         )
         """)
-    
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS categories(
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE
         )
         """)
@@ -124,17 +124,24 @@ class DatabaseManager:
         CREATE INDEX IF NOT EXISTS idx_transactions_type
         ON transactions(type)
         """)
-    
-        for category in DEFAULT_CATEGORIES:
-    
-            cursor.execute(
+
+        # Insert default categories ONLY for a brand-new database
+        cursor.execute(
+            "SELECT COUNT(*) FROM categories"
+        )
+
+        category_count = cursor.fetchone()[0]
+
+        if category_count == 0:
+
+            cursor.executemany(
                 """
-                INSERT OR IGNORE INTO categories(name)
+                INSERT INTO categories(name)
                 VALUES(?)
                 """,
-                (category,)
+                [(category,) for category in DEFAULT_CATEGORIES]
             )
-    
+
         self.conn.commit()
         
     
