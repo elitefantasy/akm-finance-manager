@@ -1,0 +1,260 @@
+## Phase 1 (Current Sprint)
+
+Our goal is only this:
+
+* ✅ Modern Add screen
+* ✅ Dashboard styling
+* ✅ Better spacing
+* ✅ Better recent transactions
+* ❌ No recurring changes yet
+
+---
+
+# Step 1 — Update UI Metrics
+
+## File
+
+`ui/ui_metrics.py`
+
+### Add these inside `class Size:`
+
+```python
+# Add Screen
+ADD_BALANCE_HEIGHT = dp(95 * UI_SCALE)
+
+ADD_RECENT_HEIGHT = dp(210 * UI_SCALE)
+
+ADD_BUTTON_HEIGHT = dp(54 * UI_SCALE)
+```
+
+---
+
+# Step 2 — Rebuild Add Screen Layout
+
+Instead of
+
+```
+Title
+
+Huge balance card
+
+Huge amount
+
+Huge category
+
+Huge note
+
+Huge recent
+
+Huge buttons
+```
+
+make it
+
+```
+Add Transaction
+
+Balance Card
+
+Amount
+
+Category
+
+Note
+
+Recent Transactions
+
+Income | Expense
+```
+
+Notice there is **no empty black space** anymore.
+
+---
+
+# Step 3 — Balance Card
+
+Instead of
+
+```
+Current Balance
+
+₹-2620
+
+₹200 ₹2820
+```
+
+make it visually identical to Dashboard.
+
+```
+💰 Balance
+
+₹-2,620
+
+Income ₹200
+Expense ₹2,820
+```
+
+Same card radius.
+
+Same font.
+
+Same padding.
+
+Same colors.
+
+---
+
+# Step 4 — Input Heights
+
+Current controls are oversized.
+
+Use
+
+Amount
+
+```
+48dp
+```
+
+Category
+
+```
+48dp
+```
+
+Note
+
+```
+48dp
+```
+
+instead of 60/55/80.
+
+---
+
+# Step 5 — Recent Transactions
+
+This is the biggest improvement.
+
+Current
+
+```
+26-06-2026
+
+Food +200
+```
+
+inside a Button looks like debug output.
+
+Instead create cards exactly like Dashboard.
+
+```
+Food            +₹200
+
+No Note
+
+26 Jun 2026
+```
+
+or
+
+```
+Travel          -₹150
+
+Metro
+
+25 Jun 2026
+```
+
+Tap anywhere on the card.
+
+This gives you one reusable transaction component instead of giant buttons.
+
+---
+
+# Step 6 — Buttons
+
+Current
+
+```
++ Income
+
+- Expense
+```
+
+Change only appearance.
+
+Same height.
+
+Rounded.
+
+Spacing 12dp.
+
+Exactly like Dashboard cards.
+
+---
+
+# Step 7 — Remove Empty Widget
+
+Currently you have
+
+```kv
+Widget:
+
+BottomNav:
+```
+
+Delete that Widget completely.
+
+The Recent Transactions card should naturally expand, and the BottomNav should remain pinned at the bottom.
+
+---
+
+# Phase 2 (after this)
+
+After the Add screen looks good:
+
+* Replace Repeat tab.
+* Remove RecurringScreen.
+* Add a **Recurring** section below the Note field.
+
+Example:
+
+```
+Recurring
+
+☐ Repeat every month
+
+Day
+
+[ 24 ]
+```
+
+If unchecked, hide the Day field.
+
+---
+
+## I also recommend one architecture improvement
+
+Right now, the Add screen's recent transactions are built by dynamically creating `Button` widgets in Python (`refresh_add_screen_history()`), while the Dashboard uses a reusable `DashboardTransactionRow` component.  
+
+I recommend creating a reusable `AddRecentTransactionRow` widget (similar to `DashboardTransactionRow`) and populating it instead of creating `Button` objects manually. This keeps the UI consistent and makes future features like long-press, swipe, or context menus much easier to add.
+
+This will also eliminate duplicated UI code and move your project closer to a clean, component-based design.
+
+
+As your senior developer, I'd split what we originally called "Commit 2" into two smaller commits:
+
+Commit 2A
+✅ Complete Add screen redesign
+✅ Better balance card
+✅ Better spacing
+✅ Better recent transactions
+❌ No recurring changes
+Commit 2B
+✅ Move recurring into Add screen
+✅ Remove Recurring tab
+✅ Update More menu
+✅ Delete old Recurring screen
+
+This keeps each commit focused and much easier to debug or revert.

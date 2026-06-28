@@ -1,8 +1,6 @@
 import json
-import time
 import csv
 import os
-import shutil
 from datetime import datetime
 
 from kivy.app import App
@@ -10,46 +8,75 @@ from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ListProperty, StringProperty, NumericProperty
+from kivy.properties import (
+    ListProperty,
+    StringProperty,
+    NumericProperty,
+    BooleanProperty,
+)
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.spinner import Spinner
+from kivy.factory import Factory
 
-import sqlite3
+from core import backup_service
+from core import database_service
+from core import reports
+from core.transaction_formatter import TransactionFormatter
+from core.constants import (
+    CSV_EXPORT_FILE,
+    DEFAULT_DB,
+    SETTINGS_FILE,
+    get_backup_dir,
+)
+from core.database import DatabaseManager
+from core.dialogs import DialogManager
+from core.logger import get_logger
+from core.utils import project_path
+from core.icons import Icons
+from ui.screens import *
+from ui.ui_metrics import (
+    Font,
+    Size,
+    Spacing,
+    Padding,
+    Radius,
+    Color,
+)
 
-from database import DatabaseManager
-from screens import *
-from dialogs import DialogManager
+from kivy.core.text import LabelBase
 
 
-try:
 
-    from android.storage import (
-        primary_external_storage_path
+
+logger = get_logger(__name__)
+BACKUP_DIR = get_backup_dir()
+
+LabelBase.register(
+    name="MaterialIcons",
+    fn_regular=project_path(
+        "assets",
+        "fonts",
+        "MaterialIcons-Regular.ttf"
     )
+)
 
-    BACKUP_DIR = os.path.join(
-        primary_external_storage_path(),
-        "Download",
-        "FinanceManager"
-    )
-
-except:
-
-    BACKUP_DIR = (
-        "/storage/emulated/0/Download/FinanceManager"
-    )
-
-Builder.load_file("finance.kv")
+Builder.load_file(project_path("ui", "finance.kv"))
 
 class FinanceManagerApp(App):
+    
+    from ui import ui_metrics as metrics
+    
+    icons = Icons
 
     balance = NumericProperty(0)
-    income = StringProperty("₹0")
-    expense = StringProperty("₹0")
+    income = NumericProperty(0)
+    expense = NumericProperty(0)
+    recurring_enabled = BooleanProperty(False)
+    recurring_day = StringProperty("")
     total_income = NumericProperty(0)
     total_expense = NumericProperty(0)
 
@@ -64,7 +91,7 @@ class FinanceManagerApp(App):
     add_screen_history = StringProperty("")
     
     current_filter = StringProperty("All")
-    current_database=StringProperty("finance.db")
+    current_database=StringProperty(DEFAULT_DB)
     current_screen = StringProperty("dashboard")
     
     selected_transaction_id = None
@@ -76,6 +103,23 @@ class FinanceManagerApp(App):
     category_data = ListProperty([])
     recurring_data = ListProperty([])
     database_data = ListProperty([])
+
+    statistics_data = ListProperty([])
+
+    stats_balance = StringProperty("₹0")
+    stats_income = StringProperty("₹0")
+    stats_expense = StringProperty("₹0")
+    stats_transactions = StringProperty("0")
+
+    stats_highest_income = StringProperty("₹0")
+    stats_highest_expense = StringProperty("₹0")
+    stats_top_category = StringProperty("None")
+    stats_category_count = StringProperty("0")
+
+    last_deleted_transaction = None
+    show_undo = BooleanProperty(False)
+
+
 
 
     def log(self, message):
@@ -107,7 +151,8 @@ class FinanceManagerApp(App):
         
         # open settings json
         settings_path = os.path.join(
-            App.get_running_app().user_data_dir,"settings.json"
+            App.get_running_app().user_data_dir,
+            SETTINGS_FILE
         )
         try:
             with open(
@@ -116,14 +161,14 @@ class FinanceManagerApp(App):
                     
                     db_name=settings.get(
                         "database",
-                        "finance.db")
+                        DEFAULT_DB)
             self.log(f"loaded database from settings: {db_name}")
                     
                     
         except Exception as e:
             self.log(f"Settings error:{e}")
             
-            db_name="finance.db"
+            db_name=DEFAULT_DB
                 
         
         self.transactions = []
@@ -164,7 +209,6 @@ class FinanceManagerApp(App):
         sm.add_widget(EditTransactionScreen(name="edit"))
         sm.add_widget(StatisticsScreen(name="statistics"))
         sm.add_widget(DataManagementScreen(name="datamanagement"))
-        sm.add_widget(RecurringScreen(name="recurring"))
         sm.add_widget(ManageTransactionsScreen(name="manage_transactions"))
         sm.add_widget(ManageRecurringScreen(name="manage_recurring"))
         sm.add_widget(CategoryScreen(name="categories"))
@@ -185,7 +229,7 @@ class FinanceManagerApp(App):
         rows = self.db.fetch_query(
             "SELECT * FROM transactions"
         )
-        print(rows)
+        logger.debug("Database transactions: %s", rows)
         
         
          
@@ -215,6 +259,8 @@ class FinanceManagerApp(App):
     def update_sort(self, value):
         self.sort_mode = value
         self.refresh_transaction_view()
+
+
     
     def delete_transaction(self,transaction_id):
         
@@ -227,46 +273,65 @@ class FinanceManagerApp(App):
             )
         )
     
-    def confirm_delete(self,transaction_id):
-        self.transactions = [
-            t for t in self.transactions
-            if t["id"] != transaction_id
-        ]
+    def confirm_delete(self, transaction_id):
 
-        
+        transaction = next(
+            (
+                t for t in self.transactions
+                if t["id"] == transaction_id
+            ),
+            None
+        )
+
+        if not transaction:
+            return
+
+        self.last_deleted_transaction = transaction.copy()
+
+        self.transactions.remove(transaction)
+
         self.db.delete_transaction_db(transaction_id)
-        
+
+        self.show_undo = True
+
+        Clock.unschedule(self.hide_undo)
+
+        Clock.schedule_once(
+            self.hide_undo,
+            5
+        )
+
         self.update_dashboard()
+
+    def undo_delete(self):
+
+        if not self.last_deleted_transaction:
+            return
+
+        transaction = self.last_deleted_transaction.copy()
+
+        transaction.pop("id", None)
+
+        transaction["id"] = self.db.save_transaction_db(transaction)
+
+        self.transactions.append(transaction)
+
+        self.last_deleted_transaction = None
+
+        self.show_undo = False
+
+        self.update_dashboard()
+
+
+    def hide_undo(self, dt):
+
+        self.last_deleted_transaction = None
+
+        self.show_undo = False
     
     
     def category_report(self):
-
-        report = {}
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                cat = t["category"]
-
-                report[cat] = (
-                    report.get(cat, 0)
-                    + t["amount"]
-                )
-            #print(report)
-
-        result = ""
-
-        for cat, amount in report.items():
-
-            result += (
-                f"{cat}: ₹{amount}\n"
-            )
-        
-        if result == "":
-            result = "no expense data available"
-
-        return result
+        return reports.category_report(self.transactions)
 
     # Transaction Structure
     def add_transaction(self, amount, category, note, ttype):
@@ -284,23 +349,38 @@ class FinanceManagerApp(App):
             return
             
         transaction = {
-            "id": int(time.time()),
             "type": ttype,
             "amount": (amount),
             "category": category,
             "note": note, 
             "date": datetime.now().strftime("%d-%m-%Y %H:%M")
             }
+
+        transaction["id"] = self.db.save_transaction_db(transaction)
         
         self.transactions.append(transaction)
-
-        self.db.save_transaction_db(transaction)
+        
+        if (self.recurring_enabled):
+            self.add_recurring(
+                amount,
+                category,
+                self.recurring_day,
+                show_message=False
+            )
         
         self.update_dashboard()
         
         add_screen = self.root.get_screen("add")
-        add_screen.ids.amount.text=""
-        add_screen.ids.note.text=""
+        
+        add_screen.ids.amount.text = ""
+        add_screen.ids.note.text = ""
+
+        self.recurring_enabled = False
+        self.recurring_day = ""
+
+        add_screen.ids.recurring_day.text = ""
+
+        add_screen.ids.amount.focus = True
         
         
     def refresh_transaction_view(self):
@@ -353,27 +433,9 @@ class FinanceManagerApp(App):
                 ):
                     continue
 
-            sign = "+"
-            if t["type"] == "Expense":
-               sign = "-"
-
-            note = t.get("note", "No Note")
-    
-            self.transaction_data.append({
-
-                "category": t["category"],
-            
-                "amount": f"{sign}₹{t['amount']}",
-            
-                "note": note,
-            
-                "date": t["date"].split()[0],
-
-                "amount_color":[0,1,0,1] if t["type"] == "Income" else [1,0.3,0.3,1],
-            
-                "transaction_id": t["id"]
-            
-            })
+            self.transaction_data.append(
+                TransactionFormatter.history(t)
+            )
             
 
     def update_dashboard(self):
@@ -389,9 +451,11 @@ class FinanceManagerApp(App):
         self.total_income = income
         self.total_expense = expense
     
-        self.income = f"₹{income:.0f}"
-        self.expense = f"₹{expense:.0f}"
-        self.balance = income - expense
+        self.income = income
+        self.expense = expense
+        balance = income - expense
+
+        self.balance = balance
     
         recent = ""
         
@@ -405,43 +469,34 @@ class FinanceManagerApp(App):
             recent_box = (dashboard.ids.recent_box)
             recent_box.clear_widgets()
             
-            for t in self.transactions[-3:][::-1]:
-                row = BoxLayout(
-                    orientation="vertical",
-                    size_hint_y=None,
-                    height=45)
-                
-                top_row = BoxLayout(
-                  orientation="horizontal")
+            for transaction in self.transactions[-5:][::-1]:
 
-                top_row.add_widget(Label(text=t["category"]))
-                
-                amount_label =Label(
-                    text=(
-                     f"+₹{t['amount']}"
-                    if t["type"] == "Income"
-                    else
-                         f"-₹{t['amount']}"
-                        ),
-                        color=(
-                          (0,1,0,1) #green 
-                        if t["type"]== "Income"
-                        else
-                        (1,0,0,1) # Red
-                         )
-                     )
-                top_row.add_widget(amount_label)
+                row = DashboardTransactionRow(
+                    category=transaction["category"],
+                    amount=TransactionFormatter.amount(transaction),
+                    note=TransactionFormatter.note(transaction),
+                    date=TransactionFormatter.date(transaction),
+                    amount_color=TransactionFormatter.amount_color(transaction),
+                    transaction=transaction,
+                )
 
-                row.add_widget(top_row)
-                
+            
+                row.transaction_callback = self.open_dashboard_transaction
+
                 recent_box.add_widget(row)
                 
-        except Exception as e:print("Recent Box Error:", e)
+              
+                            
+        except Exception:
+            logger.exception("Recent Box Error")
         
         self.refresh_transaction_view()
         self.refresh_add_screen_history()
-        self.top_category_text=(self.top_category())
-        self.monthly_expense_text=self.monthly_expense()
+        self.top_category_text = self.top_category()
+        self.monthly_expense_text = self.monthly_expense()
+        self.refresh_statistics()
+
+        
     
     from kivy.uix.button import Button
 
@@ -458,47 +513,21 @@ class FinanceManagerApp(App):
     
             for t in reversed(self.transactions[-8:]):
     
-                sign = "+"
-                bg_color = (0.2,0.2,0.2,1) #green
-                text_color = (1,0.3,0.3,1)
-    
-                if t["type"] == "Expense":
-                    sign = "-"
-                    text_color = (1,0.3,0.3,1) # red
-    
-                btn = Button(
-                    text=(
-                        f"{t['date'].split()[0]}\n"
-                        f"{t['category']}    "
-                        f"{sign}₹{t['amount']:.0f}"
-                    ),
-                    size_hint_y=None,
-                    height=65,
-                    background_normal = "",
-                    background_color=bg_color,
-                    color=text_color,
-                    font_size=20,
-                    halign="left",
-                    valign="middle"
-                )
-    
-                btn.bind(
-                    size=lambda instance,value:
-                    setattr(instance, "text_size", value)
+                row = AddRecentTransactionRow(
+                    category=t["category"],
+                    amount=TransactionFormatter.amount(t),
+                    note=TransactionFormatter.note(t),
+                    date=TransactionFormatter.date(t),
+                    amount_color=TransactionFormatter.amount_color(t),
+                    transaction=t,
                 )
 
-                btn.bind(
-                    on_press=lambda instance,
-                    category=t["category"],
-                    note=t.get("note",""),
-                    amount=t["amount"]:
-                    self.use_recent_transaction(category,note,amount)
-                )
+                row.transaction_callback = self.use_recent_transaction
+
+                recent_list.add_widget(row)
     
-                recent_list.add_widget(btn) #
-    
-        except Exception as e:
-            print("Recent List Error:", e)
+        except Exception:
+            logger.exception("Recent List Error")
     
     
     def update_search(self, text):
@@ -512,27 +541,7 @@ class FinanceManagerApp(App):
         self.refresh_transaction_view()
     
     def top_category(self):
-
-        categories = {}
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                cat = t["category"]
-
-                categories[cat] = (
-                    categories.get(cat, 0)
-                    + t["amount"]
-                )
-
-        if not categories:
-            return "None"
-
-        return max(
-            categories,
-            key=categories.get
-        )
+        return reports.top_category(self.transactions)
 
     # also check refresh_add_screen_history(above)
     def recent_transactions(self):
@@ -551,36 +560,27 @@ class FinanceManagerApp(App):
 
         return result
 
-    def use_recent_transaction(self,category,note,amount):
-    
+    def use_recent_transaction(self, transaction):
+
         add_screen = self.root.get_screen("add")
-    
-        add_screen.ids.category.text = category
-    
-        add_screen.ids.note.text = note
-        add_screen.ids.amount.text = str(amount)
-    
+
+        add_screen.ids.category.text = transaction["category"]
+
+        add_screen.ids.note.text = transaction.get("note", "")
+
+        add_screen.ids.amount.text = str(transaction["amount"])
+
         add_screen.ids.amount.focus = True
     
+    def open_dashboard_transaction(self, transaction):
+        """
+        Opens the Edit Transaction screen from a dashboard card.
+        """
+
+        self.open_edit(transaction["id"])
+    
     def monthly_expense(self):
-
-        month = datetime.now().month
-
-        total = 0
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                date = datetime.strptime(
-                    t["date"],
-                    "%d-%m-%Y %H:%M"
-                )
-
-                if date.month == month:
-                    total += t["amount"]
-
-        return f"₹{total}"
+        return reports.monthly_expense(self.transactions)
     
     def show_message(self, message):
 
@@ -593,7 +593,7 @@ class FinanceManagerApp(App):
     def export_csv(self):
 
         with open(
-            "finance_export.csv",
+            CSV_EXPORT_FILE,
             "w",
             newline=""
         ) as file:
@@ -670,194 +670,84 @@ class FinanceManagerApp(App):
         self.root.current = "history"
     
     def expense_summary(self):
-
-        summary = {}
-
-        for t in self.transactions:
-
-            if t["type"] == "Expense":
-
-                cat = t["category"]
-
-                summary[cat] = (
-                    summary.get(cat, 0)
-                    + t["amount"]
-                )
-
-        result = ""
-
-        for cat, amount in summary.items():
-
-            result += (
-                f"{cat}: ₹{amount}\n"
-            )
-
-        return result
+        return reports.expense_summary(self.transactions)
     
 
 
-    def category_statistics(self):
+    def refresh_statistics(self):
 
-        stats = {}
-
-        # Build category statistics
-        for t in self.transactions:
-
-            if t["type"] != "Expense":
-                continue
-
-            category = t["category"]
-
-            if category not in stats:
-
-                stats[category] = {
-                    "total": 0,
-                    "months": set()
-                }
-
-            stats[category]["total"] += t["amount"]
-
-            date_obj = datetime.strptime(
-                t["date"],
-                "%d-%m-%Y %H:%M"
-            )
-
-            month_key = (
-                f"{date_obj.year}-{date_obj.month}"
-            )
-
-            stats[category]["months"].add(
-                month_key
-            )
-
-        # Overall insights
-        expenses = [
-            t for t in self.transactions
-            if t["type"] == "Expense"
-        ]
-
-        incomes = [
-            t for t in self.transactions
-            if t["type"] == "Income"
-        ]
-
-        highest_expense = (
-            max(expenses, key=lambda x: x["amount"])
-            if expenses else None
+        stats = reports.statistics_data(
+            self.transactions
         )
 
-        highest_income = (
-            max(incomes, key=lambda x: x["amount"])
-            if incomes else None
+        self.stats_balance = (
+            f"₹{stats['balance']:,.0f}"
         )
 
-        avg_expense = (
-            sum(t["amount"] for t in expenses)
-            / len(expenses)
-            if expenses else 0
+        self.stats_income = (
+            f"₹{stats['income']:,.0f}"
         )
 
-        avg_income = (
-            sum(t["amount"] for t in incomes)
-            / len(incomes)
-            if incomes else 0
+        self.stats_expense = (
+            f"₹{stats['expense']:,.0f}"
         )
 
-        # Result text
-        result = (
-            "📊 FINANCE STATISTICS\n\n"
-            f"Total Transactions: "
-            f"{len(self.transactions)}\n\n"
+        self.stats_transactions = str(
+            stats["transactions"]
         )
 
-        if highest_expense:
-
-            result += (
-                "Highest Expense:\n"
-                f"{highest_expense['category']} "
-                f"₹{highest_expense['amount']:.0f}\n\n"
-            )
-
-        if highest_income:
-
-            result += (
-                "Highest Income:\n"
-                f"{highest_income['category']} "
-                f"₹{highest_income['amount']:.0f}\n\n"
-            )
-
-        result += (
-            f"Average Expense: "
-            f"₹{avg_expense:.0f}\n"
-
-            f"Average Income: "
-            f"₹{avg_income:.0f}\n"
-
-            f"Expense Categories: "
-            f"{len(stats)}\n\n"
-
-            "-----------------------------\n\n"
+        self.stats_highest_income = (
+            f"₹{stats['highest_income']:,.0f}"
         )
 
-        # Category-wise statistics
-        for category, data in stats.items():
+        self.stats_highest_expense = (
+            f"₹{stats['highest_expense']:,.0f}"
+        )
 
-            total = data["total"]
+        self.stats_top_category = (
+            stats["top_category"]
+        )
 
-            months = len(
-                data["months"]
-            )
+        self.stats_category_count = str(
+            stats["category_count"]
+        )
 
-            avg_monthly = (
-                total / months
-                if months else 0
-            )
+        self.statistics_data = []
 
-            result += (
-                f"{category}\n"
-                f"Total Expense: ₹{total:.0f}\n"
-                f"Months Active: {months}\n"
-                f"Average Monthly Expense: "
-                f"₹{avg_monthly:.0f}\n\n"
-            )
+        for item in stats["categories"]:
 
-        return result
+            self.statistics_data.append({
+
+                "category": item["category"],
+
+                "total":
+                    f"₹{item['total']:,.0f}",
+
+                "months":
+                    str(item["months"]),
+
+                "average":
+                    f"₹{item['average']:,.0f}",
+            })
     
 
     def backup_data(self):
-    
+
         try:
-    
-            backup_dir = (
-                "/storage/emulated/0/Download/FinanceManager"
-            )
-    
-            os.makedirs(
-                backup_dir,
-                exist_ok=True
-            )
-    
-            source = self.db.db_path
-    
-            destination = os.path.join(
-                backup_dir,
-                self.current_database
-            )
-    
-            shutil.copy2(
-                source,
-                destination
+
+            backup_path = backup_service.backup_database(
+                self.db.db_path,
+                self.current_database,
             )
 
-            self.log(f"Backup created: {self.current_database}")
-    
             DialogManager.show_message(
-                "Success",
-                f"{self.current_database} backed up"
+                "Backup Successful",
+                f"{self.current_database} backed up successfully.\n\n"
+                f"Location:\n{backup_path}"
             )
-    
+
         except Exception as e:
-    
+
             DialogManager.show_message(
                 "Error",
                 str(e)
@@ -868,51 +758,44 @@ class FinanceManagerApp(App):
 
         try:
     
-            filename = filename.strip()
-    
-            if not filename.endswith(".db"):
-                filename += ".db"
-    
-            source = os.path.join(
-                "/storage/emulated/0/Download/FinanceManager",
-                filename
+            success, message, db_name = (
+                backup_service.import_database_file(
+                    filename,
+                    App.get_running_app().user_data_dir
+                )
             )
-    
-            destination = os.path.join(
-                App.get_running_app().user_data_dir,
-                filename
-            )
-    
-            if not os.path.exists(source):
-    
+
+            if not success:
+
+                if message == "Database already exists":
+
+                    DialogManager.confirm(
+                        "Replace Database",
+                        f"{db_name} already exists.\n\nReplace it with the backup?",
+                        lambda: self.replace_database(
+                            db_name,
+                            popup,
+                        ),
+                    )
+
+                    return
+
                 DialogManager.show_message(
                     "Error",
-                    "Database not found"
+                    message,
                 )
+
                 return
-    
-            if os.path.exists(destination):
-    
-                DialogManager.show_message(
-                    "Error",
-                    "Database already exists"
-                )
-                return
-    
-            shutil.copy2(
-                source,
-                destination
-            )
-    
+
             self.refresh_database_list()
 
-            self.log(f"database imported succesfully")
+            self.log("database imported succesfully")
     
             popup.dismiss()
     
             DialogManager.show_message(
                 "Success",
-                f"{filename} imported"
+                f"{db_name} imported"
             )
     
         except Exception as e:
@@ -922,32 +805,84 @@ class FinanceManagerApp(App):
                 str(e)
             )
 
+    def replace_database(
+        self,
+        db_name,
+        popup,
+    ):
+
+        try:
+
+            if self.current_database == db_name:
+                self.db.conn.close()
+
+            success, message, _ = (
+                backup_service.import_database_file(
+                    db_name,
+                    App.get_running_app().user_data_dir,
+                    overwrite=True,
+                )
+            )
+
+            if not success:
+
+                DialogManager.show_message(
+                    "Error",
+                    message,
+                )
+
+                if self.current_database == db_name:
+                    self.db = DatabaseManager(db_name)
+
+                return
+
+            if self.current_database == db_name:
+
+                self.db = DatabaseManager(db_name)
+
+                self.categories = self.db.load_categories_db()
+
+                self.transactions = self.db.load_transactions_db()
+
+                self.recurring_transactions = self.db.load_recurring_db()
+
+                self.refresh_categories()
+
+                self.refresh_recurring_view()
+
+                self.update_dashboard()
+
+            popup.dismiss()
+
+            self.refresh_database_list()
+
+            DialogManager.show_message(
+                "Success",
+                f"{db_name} replaced successfully.",
+            )
+
+        except Exception as e:
+
+            DialogManager.show_message(
+                "Error",
+                str(e),
+            )
+    
     def show_import_popup(self):
 
-        backup_dir = (
-            "/storage/emulated/0/Download/FinanceManager"
-        )
-    
         content = BoxLayout(
             orientation="vertical",
-            spacing=10,
-            padding=10
+            spacing=Spacing.SMALL,
+            padding=Spacing.NORMAL
         )
     
         popup = Popup(
             title="Import Database",
             content=content,
-            size_hint=(0.8,0.6)
+            size_hint=Size.POPUP_MEDIUM
         )
     
-        databases = []
-    
-        if os.path.exists(backup_dir):
-    
-            databases = [
-                f for f in os.listdir(backup_dir)
-                if f.endswith(".db")
-            ]
+        databases = backup_service.list_backup_databases()
     
         if not databases:
     
@@ -959,12 +894,12 @@ class FinanceManagerApp(App):
     
         else:
     
-            for db in sorted(databases):
+            for db in databases:
     
                 btn = Button(
                     text=db,
                     size_hint_y=None,
-                    height=50
+                    height=Size.BUTTON_HEIGHT
                 )
     
                 btn.bind(
@@ -1048,26 +983,28 @@ class FinanceManagerApp(App):
             padding=10
         )
 
-        day = TextInput(
+        day = Factory.AppTextInput(
             hint_text="DD",
-            multiline=False
+            input_filter="int",
         )
 
-        month = TextInput(
+        month = Factory.AppTextInput(
             hint_text="MM",
-            multiline=False
+            input_filter="int",
         )
 
-        year = TextInput(
+        year = Factory.AppTextInput(
             hint_text="YYYY",
-            multiline=False
+            input_filter="int",
         )
 
         layout.add_widget(day)
         layout.add_widget(month)
         layout.add_widget(year)
 
-        save_btn = Button(text="Save Date")
+        save_btn = Factory.AppPrimaryButton(
+            text="Save Date"
+        )
         layout.add_widget(save_btn)
 
         popup = Popup(
@@ -1101,7 +1038,6 @@ class FinanceManagerApp(App):
 
             screen = self.root.get_screen("edit")
             
-            #print("OLD:", screen.ids.date.text)
             old_time = (
                 screen.ids.date.text
                 .split(" ")[1]
@@ -1110,16 +1046,20 @@ class FinanceManagerApp(App):
             screen.ids.date.text = (
                 f"{date} {old_time}"
             )
-           # print(screen.ids.date.text)
-           # print("NEW:", screen.ids.date.text)
 
             popup.dismiss()
             
-        except Exception as e:
-            print(e)
+        except Exception:
+            logger.exception("Date popup error")
             popup.dismiss()
     
-    def add_recurring(self, amount, category, day):
+    def add_recurring(
+        self,
+        amount,
+        category,
+        day,
+        show_message=True
+    ):
 
         try:
 
@@ -1152,10 +1092,11 @@ class FinanceManagerApp(App):
        
         self.refresh_recurring_view()
         
-        DialogManager.show_message(
-            "Sucess",
-            "Recurring Expense Added"
-        )
+        if show_message:
+            DialogManager.show_message(
+                "Success",
+                "Recurring Expense Added"
+            )
         
     
     
@@ -1173,9 +1114,6 @@ class FinanceManagerApp(App):
                 ) != current_period):
 
                 transaction = {
-                    "id": int(
-                        time.time()
-                    ),
                     "type": "Expense",
                     "amount":r["amount"],
                     "category":r["category"],
@@ -1184,9 +1122,9 @@ class FinanceManagerApp(App):
                     "date":today.strftime("%d-%m-%Y %H:%M")
                 }
 
-                self.transactions.append(transaction)
+                transaction["id"] = self.db.save_transaction_db(transaction)
 
-                self.db.save_transaction_db(transaction)
+                self.transactions.append(transaction)
 
                 r["last_added"] = (current_period)
 
@@ -1202,53 +1140,74 @@ class FinanceManagerApp(App):
     
     def refresh_recurring_view(self):
 
-        data = []
+        self.recurring_data = []
 
-        for i, r in enumerate(
-            self.recurring_transactions
-        ):
+        for i, recurring in enumerate(self.recurring_transactions):
 
-            data.append({
+            self.recurring_data.append({
 
-                "text":
-                f"₹{r['amount']}\n"
-                f"{r['category']}\n"
-                f"Day {r['day']}",
+                "index": i,
 
-                "index": i
+                "id": recurring["id"],
+
+                "category": recurring["category"],
+
+                "amount": f"₹{recurring['amount']:,.0f}",
+
+                "day": f"Repeats every month • Day {recurring['day']}",
+
+                "last_added": recurring["last_added"] or "Never",
             })
 
-        self.recurring_data = data
-    
-    def save_recurring_edit(self,index,amount,category,day,popup):
+    def save_recurring_edit(
+        self,
+        index,
+        amount,
+        category,
+        day,
+        popup
+    ):
+
         try:
+
             amount = float(amount)
             day = int(day)
+
             if not 1 <= day <= 31:
                 raise Exception
+
         except:
+
+            DialogManager.show_message(
+                "Invalid Input",
+                "Enter a valid amount and day (1-31)"
+            )
+
             return
 
-        recurring = (
-            self.recurring_transactions[index]
-        )
+        recurring = self.recurring_transactions[index]
 
         recurring["amount"] = amount
         recurring["category"] = category
         recurring["day"] = day
-        
+
         self.db.update_recurring_db(
             recurring["id"],
-        {
-            "amount": amount,
-            "category": category,
-            "day": day
-        }
+            {
+                "amount": amount,
+                "category": category,
+                "day": day,
+            }
         )
 
         self.refresh_recurring_view()
 
         popup.dismiss()
+
+        DialogManager.show_message(
+            "Success",
+            "Recurring transaction updated."
+        )
 
         
     
@@ -1256,18 +1215,28 @@ class FinanceManagerApp(App):
 
         if (
             index < 0
-            or index >= len(
-                self.recurring_transactions
-            )
+            or index >= len(self.recurring_transactions)
         ):
             return
 
-        recurring = (
-            self.recurring_transactions.pop(index))
-        
+        DialogManager.confirm(
+            "Delete Recurring Transaction",
+            "Delete this recurring transaction?",
+            lambda: self.confirm_delete_recurring(index)
+        )
+
+    def confirm_delete_recurring(self, index):
+
+        recurring = self.recurring_transactions.pop(index)
+
         self.db.delete_recurring_db(recurring["id"])
 
         self.refresh_recurring_view()
+
+        DialogManager.show_message(
+            "Success",
+            "Recurring transaction deleted."
+        )
     
     
     def edit_recurring(self, index):
@@ -1280,22 +1249,23 @@ class FinanceManagerApp(App):
             padding=10
         )
 
-        amount = TextInput(
+        amount = Factory.AppTextInput(
             text=str(recurring["amount"]),
-            multiline=False
+            input_filter="float",
         )
 
-        category = Spinner(
+        category = Factory.AppSpinner(
             text=recurring["category"],
             values=self.categories
         )
 
-        day = TextInput(
+        day = Factory.AppTextInput(
+            input_filter="int",
             text=str(recurring["day"]),
             multiline=False
         )
 
-        save_btn = Button(
+        save_btn = Factory.AppPrimaryButton(
             text="Save"
         )
 
@@ -1332,34 +1302,45 @@ class FinanceManagerApp(App):
         )
    
     def add_category(self, name):
+
         name = name.strip()
 
         if not name:
+
             DialogManager.show_message(
                 "Error",
                 "Enter category name"
             )
+
             return
-           
 
         if name in self.categories:
+
             DialogManager.show_message(
-                "error",
-                "category already exists"
+                "Error",
+                "Category already exists"
             )
+
             return
-           
 
         self.db.save_category_db(name)
-        
+
         self.categories = self.db.load_categories_db()
-        
+
         self.refresh_categories()
-        
+
+        self.root.get_screen(
+            "categories"
+        ).ids.category_name.text = ""
+
+        self.root.get_screen(
+            "categories"
+        ).ids.category_name.focus = True
+
         DialogManager.show_message(
-                "Success",
-                "Category Added"
-            )
+            "Success",
+            "Category Added"
+        )
            
     
     def refresh_categories(self):
@@ -1398,59 +1379,67 @@ class FinanceManagerApp(App):
         except:
             pass
         
-        try:
-            spinner = self.root.get_screen(
-                "recurring"
-            ).ids.category
-            spinner.values = self.categories
-            
-            if spinner.text not in self.categories:
-                spinner.text = self.categories[0]
-                
-        except:
-            pass
     
-    def delete_category(self,category_id):
+    def delete_category(self, category_id):
+
+        if len(self.categories) <= 1:
+
+            DialogManager.show_message(
+                "Error",
+                "At least one category is required."
+            )
+
+            return
+
+        category_name = next(
+            (
+                c["text"]
+                for c in self.category_data
+                if c["category_id"] == category_id
+            ),
+            None
+        )
+
+        if any(
+            t["category"] == category_name
+            for t in self.transactions
+        ):
+
+            DialogManager.show_message(
+                "Error",
+                "Category is used by existing transactions."
+            )
+
+            return
+
+        DialogManager.confirm(
+            "Delete Category",
+            f"Delete '{category_name}'?",
+            lambda: self.confirm_delete_category(
+                category_id
+            )
+        )
+
+    def confirm_delete_category(self, category_id):
 
         self.db.delete_category_db(category_id)
 
         self.categories = self.db.load_categories_db()
-        
+
         self.refresh_categories()
     
-    def edit_category(self,category_id,old_name):
-        layout = BoxLayout(
-            orientation="vertical",
-            spacing=10,
-            padding=10
-        )
+    def edit_category(self, category_id, old_name):
 
-        name = TextInput(
-            text=old_name,
-            multiline=False
-        )
-
-        save = Button(
-            text="Save"
-        )
-
-        layout.add_widget(name)
-
-        layout.add_widget(save)
-
-        popup = Popup(
+        popup = DialogManager.text_input_popup(
             title="Edit Category",
-            content=layout,
-            size_hint=(.8,.4)
-        )
-
-        save.bind(
-            on_press=lambda x:
-            self.save_category_edit(
-                category_id,
-                name.text,
-                popup
-            )
+            text=old_name,
+            button_text="Save",
+            callback=lambda value, p:
+                self.save_category_edit(
+                    category_id,
+                    value,
+                    p,
+                ),
         )
 
         popup.open()
@@ -1476,45 +1465,25 @@ class FinanceManagerApp(App):
         add_screen.ids.amount.focus = True
     
     def create_database_popup(self):
-        layout=BoxLayout(
-            orientation="vertical",
-            spacing=10,
-            padding=10)
-            
-        name=TextInput(
-            hint_text="Database Name",
-            multiline=False)
-        
-        create_btn=Button(text="Create")
-        
-        layout.add_widget(name)
-        layout.add_widget(create_btn)
-        
-        popup=Popup(
-            title="Create Database",
-            content=layout,
-            size_hint=(.8,.4))
-        
-        create_btn.bind(
-            on_press=lambda x:
-                self.create_new_database(name.text,popup))
 
-        self.log(f"opening create database popup")
-        
+        popup = DialogManager.text_input_popup(
+            title="Create Database",
+            hint_text="Database Name",
+            button_text="Create",
+            callback=lambda value, p:
+                self.create_new_database(value, p),
+        )
+
+        self.log("opening create database popup")
+
         popup.open()
     
     def create_new_database(self,name,popup):
-        name=name.strip()
-        
-        if not name:
-            DialogManager.show_message("Error","Enter database name")
+        try:
+            db_name = database_service.create_database(name)
+        except Exception as e:
+            DialogManager.show_message("Error", str(e))
             return
-        
-        db_name=f"{name}.db"
-        
-        temp_db=DatabaseManager(db_name)  
-        temp_db.create_database()
-        temp_db.conn.close()
         
         popup.dismiss()
 
@@ -1535,11 +1504,10 @@ class FinanceManagerApp(App):
 
         self.log(f"saving databae: {db_name}")
 
-        settings_path = os.path.join(App.get_running_app().user_data_dir,"settings.json")
-        
-        with open(settings_path, "w") as f:
-                json.dump(
-                    {"database":db_name},f)
+        database_service.save_selected_database(
+            App.get_running_app().user_data_dir,
+            db_name
+        )
                     
         self.db=DatabaseManager(db_name)
         
@@ -1555,110 +1523,80 @@ class FinanceManagerApp(App):
         
     
     def refresh_database_list(self):
-        self.database_data = []
-        databases = [
-           f for f in os.listdir(
-               App.get_running_app().user_data_dir)
-            if f.endswith(".db")
-            ]
-        for db in sorted(databases):
-            self.database_data.append({
+        self.database_data = [
+            {
                 "db_name": db
-            })
+            }
+            for db in database_service.list_databases(
+                App.get_running_app().user_data_dir
+            )
+        ]
             
-    def rename_database_popup(self,old_name):
-      layout=BoxLayout(
-        orientation="vertical",
-        spacing=10,
-        padding=10)
-        
-      name_input=TextInput(
-        text=old_name.replace(".db",""),
-        multiline=False)
-      
-      save_btn=Button(text="Save")
-      
-      layout.add_widget(name_input)
-      layout.add_widget(save_btn)
-      
-      popup=Popup(
-        title="Rename Database",
-        content=layout,
-        size_hint=(.8,.4))
-      
-      save_btn.bind(
-        on_press=lambda x:
-          self.rename_database(
-            old_name,
-            name_input.text,
-            popup))
-      
-      popup.open()
+    def rename_database_popup(self, old_name):
+
+        popup = DialogManager.text_input_popup(
+            title="Rename Database",
+            text=old_name.replace(".db", ""),
+            button_text="Save",
+            callback=lambda value, p:
+                self.rename_database(
+                    old_name,
+                    value,
+                    p,
+                ),
+        )
+
+        popup.open()
     
     def rename_database(self,old_name,new_name,popup):
-        new_name = (
-            new_name.strip()
-            + ".db"
-        )
-        if new_name == ".db":
-            DialogManager.show_message(
-                "Error",
-                "Enter database name"
-            )
-            return
-
         user_dir = App.get_running_app().user_data_dir
+        is_current_database = self.current_database == old_name
 
-        old_path = os.path.join(user_dir,old_name)
+        try:
+            if is_current_database:
+                self.db.conn.close()
 
-        new_path = os.path.join(user_dir,new_name)
-        
-        if os.path.exists(
-            new_path
-        ):
+            success, message, db_name = (
+                database_service.rename_database_file(
+                    user_dir,
+                    old_name,
+                    new_name,
+                    self.current_database
+                )
+            )
+
+            if not success:
+                if is_current_database:
+                    self.db = DatabaseManager(old_name)
+
+                DialogManager.show_message(
+                    "Error",
+                    message
+                )
+                return
+
+            if is_current_database:
+                self.current_database = db_name
+                self.db = DatabaseManager(db_name)
+
+        except Exception as e:
+            if is_current_database:
+                self.db = DatabaseManager(old_name)
+
             DialogManager.show_message(
                 "Error",
-                "Database already exists"
+                str(e)
             )
             return
 
-        self.log(f"old path = {old_path}")
-        self.log(f"new path= {new_path}")
-        
-        os.rename(
-            old_path,
-            new_path
-        )
-        
-        if self.current_database == old_name:
-            self.db.conn.close()
-            
-            self.current_database = (new_name)
-
-            self.db = DatabaseManager(new_name)
-
-            settings_path = os.path.join(user_dir,"settings.json")
-            with open(
-                settings_path,
-                "w"
-            ) as f:
-                json.dump(
-                    {
-                        "database": new_name
-                    },
-                    f
-                )
-
-        
-        
-        
+        self.log(f"database renamed: {old_name} -> {db_name}")
         self.refresh_database_list()
         popup.dismiss()
     
-    def delete_database_popup(self,db_name):
+    def delete_database_popup(self, db_name):
 
-        self.log(f"opening delete database popup")
-        
+        self.log("opening delete database popup")
+
         if db_name == self.current_database:
             DialogManager.show_message(
                 "Error",
@@ -1666,112 +1604,122 @@ class FinanceManagerApp(App):
             )
             return
 
-        layout = BoxLayout(
-            orientation="vertical",
-            spacing=10,
-            padding=10
+        DialogManager.confirm(
+            "Confirm Delete",
+            f"Delete {db_name}?",
+            lambda: self.delete_database(db_name)
         )
-
-        layout.add_widget(
-            Label(
-                text=f"Delete {db_name}?"))
-
-        buttons = BoxLayout(
-            spacing=10
-        )
-        yes_btn = Button(
-            text="Yes"
-        )
-        no_btn = Button(
-            text="No"
-        )
-
-        buttons.add_widget(yes_btn)
-        buttons.add_widget(no_btn)
-
-        layout.add_widget(buttons)
-
-        popup = Popup(
-            title="Confirm Delete",
-            content=layout,
-            size_hint=(.8,.4)
-        )
-
-        yes_btn.bind(
-            on_press=lambda x:
-            self.delete_database(
-                db_name,
-                popup
-            )
-        )
-
-        no_btn.bind(
-            on_press=lambda x:
-            popup.dismiss()
-        )
-
-        popup.open()
     
-    def delete_database(self,db_name,popup):
-        if db_name == self.current_database:
+    def delete_database(self, db_name):
 
-            DialogManager.show_message(
-                "Error",
-                "Cannot delete active database"
-            )
-
-            return
-        
         try:
-            db_path = os.path.join(
-                App.get_running_app().user_data_dir,db_name
+
+            success, message = (
+                database_service.delete_database_file(
+                    App.get_running_app().user_data_dir,
+                    db_name,
+                    self.current_database
+                )
             )
-            
-            os.remove(db_path)
+
+            if not success:
+                DialogManager.show_message(
+                    "Error",
+                    message
+                )
+                return
 
             self.refresh_database_list()
-            popup.dismiss()
+
             DialogManager.show_message(
                 "Success",
                 f"{db_name} deleted"
             )
-            self.log(f"database deleted succesfully")
+
+            self.log(f"database deleted: {db_name}")
+
         except Exception as e:
-          DialogManager.show_message(
-               "Error",
-              str(e)
-          )
+
+            DialogManager.show_message(
+                "Error",
+                str(e)
+            )
 
     def more_menu(self):
 
+        metrics = self.metrics
+
         layout = BoxLayout(
             orientation="vertical",
-            spacing=10,
-            padding=10
+            spacing=metrics.Spacing.POPUP,
+            padding=metrics.Padding.POPUP,
         )
 
-        categories = Button(text="Categories")
+        categories = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.CATEGORY}[/font]  Categories"
+        )
 
-        data = Button(text="Data Management")
+        data = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.DATABASE}[/font]  Data Management"
+        )
         
-        statistics=Button(
-          text="statistics")
+        recurring = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.REPEAT}[/font]  Recurring Manager"
+        )
+        
+        statistics = Button(
+            background_normal="",
+            background_down="",
+            background_color=metrics.Color.INACTIVE,
+            size_hint_y=None,
+            height=metrics.Size.POPUP_BUTTON_HEIGHT,
+            markup=True,
+            text=f"[font=MaterialIcons]{self.icons.CALENDAR}[/font]  Statistics"
+        )
 
         layout.add_widget(categories)
+        
+        layout.add_widget(recurring)
 
         layout.add_widget(data)
         
         layout.add_widget(statistics)
 
-        popup = Popup(title="More",
-            content=layout,
-            size_hint=(.8,.5)
+        popup = DialogManager.create_popup(
+            "More",
+            layout,
         )
 
         categories.bind(
             on_press=lambda x:
             self.open_screen(
                 "categories",
+                popup
+            )
+        )
+        
+        recurring.bind(
+            on_press=lambda x:
+            self.open_screen(
+                "manage_recurring",
                 popup
             )
         )
@@ -1796,6 +1744,9 @@ class FinanceManagerApp(App):
         popup.dismiss()
     
     def go_to_screen(self, screen_name):
+        if screen_name == "manage_recurring":
+            self.refresh_recurring_view()
+
         self.root.current = screen_name
         self.current_screen = screen_name
 

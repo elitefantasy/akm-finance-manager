@@ -1,10 +1,71 @@
 import sqlite3
 import os
+from pathlib import Path
 from kivy.app import App
 
-DEFAULT_DB = "finance.db"
+from core.constants import (
+    DEFAULT_CATEGORIES,
+    DEFAULT_DB,
+    REQUIRED_SCHEMA,
+)
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 class DatabaseManager:
+
+    @staticmethod
+    def validate_database_schema(db_path):
+        try:
+            db_uri = Path(db_path).resolve().as_uri() + "?mode=ro"
+
+            conn = sqlite3.connect(db_uri, uri=True)
+            try:
+                for table, expected_columns in REQUIRED_SCHEMA.items():
+                    rows = conn.execute(
+                        f"PRAGMA table_info({table})"
+                    ).fetchall()
+
+                    if not rows:
+                        return (
+                            False,
+                            f"Missing required table: {table}"
+                        )
+
+                    columns = {
+                        row[1]: row[2].upper()
+                        for row in rows
+                    }
+
+                    for column, expected_type in expected_columns.items():
+                        actual_type = columns.get(column)
+
+                        if actual_type is None:
+                            return (
+                                False,
+                                f"Missing column: {table}.{column}"
+                            )
+
+                        if actual_type != expected_type:
+                            return (
+                                False,
+                                (
+                                    f"Invalid column type for "
+                                    f"{table}.{column}"
+                                )
+                            )
+            finally:
+                conn.close()
+
+            return True, ""
+
+        except sqlite3.DatabaseError:
+            logger.exception("Imported database schema validation failed")
+            return False, "Selected file is not a valid SQLite database"
+
+        except OSError:
+            logger.exception("Imported database file could not be read")
+            return False, "Database file could not be read"
 
     def __init__(self, db_name=DEFAULT_DB):
         self.db_name= db_name
@@ -15,12 +76,12 @@ class DatabaseManager:
 
         self.conn = sqlite3.connect(self.db_path)
 
-        print(self.db_path)
+        logger.debug("SQLite database path: %s", self.db_path)
 
     def create_database(self):
 
         cursor = self.conn.cursor()
-    
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS transactions(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +92,7 @@ class DatabaseManager:
             date TEXT
         )
         """)
-    
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS recurring_transactions(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -41,33 +102,46 @@ class DatabaseManager:
             last_added TEXT
         )
         """)
-    
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS categories(
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT UNIQUE
         )
         """)
-    
-        default_categories = [
-            "Food",
-            "Travel",
-            "Shopping",
-            "Medical",
-            "Education",
-            "Other"
-        ]
-    
-        for category in default_categories:
-    
-            cursor.execute(
+
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_transactions_date
+        ON transactions(date)
+        """)
+
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_transactions_category
+        ON transactions(category)
+        """)
+
+        cursor.execute("""
+        CREATE INDEX IF NOT EXISTS idx_transactions_type
+        ON transactions(type)
+        """)
+
+        # Insert default categories ONLY for a brand-new database
+        cursor.execute(
+            "SELECT COUNT(*) FROM categories"
+        )
+
+        category_count = cursor.fetchone()[0]
+
+        if category_count == 0:
+
+            cursor.executemany(
                 """
-                INSERT OR IGNORE INTO categories(name)
+                INSERT INTO categories(name)
                 VALUES(?)
                 """,
-                (category,)
+                [(category,) for category in DEFAULT_CATEGORIES]
             )
-    
+
         self.conn.commit()
         
     
@@ -119,7 +193,9 @@ class DatabaseManager:
 
         values = tuple(transaction.values())
 
-        self.execute_query(
+        cursor = self.conn.cursor()
+
+        cursor.execute(
 
             f"""
             INSERT INTO transactions
@@ -130,6 +206,10 @@ class DatabaseManager:
 
             values
         )
+
+        self.conn.commit()
+
+        return cursor.lastrowid
     
     def   delete_transaction_db(self,transaction_id):
         self.execute_query(

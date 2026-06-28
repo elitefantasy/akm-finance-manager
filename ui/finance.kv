@@ -1,0 +1,1809 @@
+<Card@BoxLayout>
+    orientation: "vertical"
+    padding: 10
+    spacing: 5
+    canvas.before:
+        Color:
+        	rgba:app.metrics.Color.CARD
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [15]
+
+<PopupContent@BoxLayout>
+
+    orientation: "vertical"
+
+    spacing: app.metrics.Spacing.POPUP
+
+    padding: app.metrics.Padding.POPUP
+
+<PopupButtonRow@BoxLayout>
+
+    size_hint_y: None
+
+    height: app.metrics.Size.POPUP_BUTTON_HEIGHT
+
+    spacing: app.metrics.Spacing.NORMAL
+
+
+
+<AppButton@Button>
+
+    background_normal: ""
+    background_down: ""
+
+    background_color: rgba(59, 59, 59)
+
+    color: app.metrics.Color.TEXT_PRIMARY
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_y: None
+    height: app.metrics.Size.BUTTON_HEIGHT
+
+<AppPrimaryButton@AppButton>
+
+    background_color: app.metrics.Color.PRIMARY
+
+<AppSuccessButton@AppButton>
+
+    background_color: app.metrics.Color.SUCCESS
+
+<AppDangerButton@AppButton>
+
+    background_color: app.metrics.Color.DANGER
+
+<AppIconButton@Button>
+
+    markup: True
+
+    background_normal: ""
+    background_down: ""
+
+    background_color: 0,0,0,0
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_x: None
+
+    width: dp(32)
+
+<AppPopupButton@AppButton>
+
+    size_hint_y: None
+    height: app.metrics.Size.POPUP_BUTTON_HEIGHT
+
+<AppTextInput@TextInput>
+
+    multiline: False
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_y: None
+    height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
+    padding: [dp(12), dp(12)]
+
+    background_normal: ""
+    background_active: ""
+
+    background_color: app.metrics.Color.SURFACE
+
+    foreground_color: app.metrics.Color.TEXT_PRIMARY
+
+    hint_text_color: app.metrics.Color.TEXT_SECONDARY
+
+    cursor_color: app.metrics.Color.NAV_ACTIVE
+
+    cursor_width: "2dp"
+
+    selection_color: (.25, .45, .0, .35)
+
+<AppSpinner@Spinner>
+	
+	option_cls: "AppSpinnerOption"
+
+    size_hint_y: None
+    height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
+    font_size: app.metrics.Font.NORMAL
+
+    background_normal: ""
+    background_color: app.metrics.Color.PRIMARY
+
+    color: app.metrics.Color.TEXT_PRIMARY
+
+    sync_height: True
+
+# dropdown options
+<AppSpinnerOption@SpinnerOption>
+
+    background_normal: ""
+    background_down: ""
+
+    background_color: 
+    	(app.metrics.Color.SURFACE_VARIANT) if self.state == "down" else app.metrics.Color.SURFACE
+
+    color: app.metrics.Color.TEXT_PRIMARY
+
+    font_size: app.metrics.Font.NORMAL
+
+    size_hint_y: None
+    height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
+<DashboardScreen>
+    BoxLayout:
+        orientation:"vertical"
+
+        ScrollView:
+    		
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 15
+                padding: [15, 22, 15, 15]
+    
+    			# Dashboard Header Style
+                BoxLayout:
+					orientation: "horizontal"
+					spacing: 8
+					size_hint_y: None
+					height: 40
+
+					Label:
+						font_name: "MaterialIcons"
+						text: app.icons.BALANCE
+						font_size: "24sp"
+						size_hint_x: None
+						width: 40
+
+					Label:
+						text: "Finance Manager"
+						bold: True
+    
+                # BALANCE CARD
+                Card:
+                    size_hint_y: None
+                    height: app.metrics.Size.BALANCE_CARD_HEIGHT
+      
+                    BoxLayout:
+						orientation: "horizontal"
+						spacing: dp(4)
+						size_hint_y: None
+						height: dp(28)
+
+						Label:
+							font_name: "MaterialIcons"
+							text: app.icons.BALANCE
+							font_size: "18sp"
+							size_hint_x: None
+							width: dp(30)
+
+						Label:
+							text: "Balance"
+							font_size: app.metrics.Font.CARD_TITLE
+      
+                    Label:
+                        text: f"-₹{abs(app.balance):,.0f}" if app.balance < 0 else f"₹{app.balance:,.0f}"
+                        bold: True
+                        font_size: app.metrics.Font.CARD_VALUE
+                
+    
+                # INCOME + EXPENSE CARDS
+                BoxLayout:
+                    size_hint_y: None
+                    height: app.metrics.Size.STAT_CARD_HEIGHT
+                    spacing: 10
+    
+                    Card:
+                        canvas.before:
+                            Color:
+                                rgba: app.metrics.Color.SUCCESS
+        
+                                RoundedRectangle:
+                                    pos:self.pos
+                                    size:self.size
+                                    radius:[15]
+    
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(4)
+							size_hint_y: None
+							height: dp(28)
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.INCOME
+								font_size: "18sp"
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "Income"
+								font_size: app.metrics.Font.CARD_TITLE
+                        
+                        Label:
+                            text: f"₹{app.income:,.0f}"
+							color: app.metrics.Color.INCOME
+                            font_size: app.metrics.Font.CARD_VALUE
+					
+					# expense card
+                    Card:
+                        canvas.before:
+                            Color:
+                                rgba:.15,.15,.15,1
+              
+                            RoundedRectangle:
+                                pos:self.pos
+                                size:self.size
+                                radius:[15]
+                
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(4)
+							size_hint_y: None
+							height: dp(28)
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.EXPENSE
+								font_size: "18sp"
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "Expense"
+								font_size: app.metrics.Font.CARD_TITLE
+                
+                        Label:
+                            text: f"₹{app.expense:,.0f}"
+							color: app.metrics.Color.EXPENSE
+                            font_size: app.metrics.Font.CARD_VALUE
+    
+                # TOP CATEGORY CARD and This Month
+                BoxLayout:
+                    size_hint_y: None
+                    height: app.metrics.Size.STAT_CARD_HEIGHT
+                    spacing: 10
+                    
+                    Card:
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(4)
+							size_hint_y: None
+							height: dp(28)
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.CATEGORY
+								font_size: "18sp"
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "Top Category"
+								font_size: app.metrics.Font.CARD_TITLE
+                
+                        Label:
+                            text: app.top_category_text
+                
+                    Card:
+                        BoxLayout:
+							orientation: "horizontal"
+							spacing: dp(8)
+							size_hint_y: None
+							height: dp(28)
+
+							Label:
+								font_name: "MaterialIcons"
+								text: app.icons.CALENDAR
+								font_size: "18sp"
+								size_hint_x: None
+								width: dp(30)
+
+							Label:
+								text: "This Month"
+								font_size: app.metrics.Font.CARD_TITLE
+                        Label:
+                            text: app.monthly_expense_text
+				
+				
+            
+    
+                # -------------------------
+				# Recent Transactions
+				# -------------------------
+				
+				Widget:
+					size_hint_y: None
+					height: dp(6)
+
+				BoxLayout:
+					size_hint_y: None
+					height: 46
+
+					Label:
+						text: "Recent Transactions"
+						bold: True
+						font_size: app.metrics.Font.CARD_TITLE
+						halign: "left"
+						text_size: self.size
+
+					AppButton:
+						text: "View All"
+						size_hint_x: None
+						width: dp(90)
+						background_normal: ""
+						background_color: 0,0,0,0
+
+						on_press:
+							app.go_to_screen("history")
+				
+				# adding top margin
+				Widget:
+					size_hint_y: None
+					height: dp(6)
+				
+				# recent transaction box
+				BoxLayout:
+					id: recent_box
+
+					orientation: "vertical"
+
+					spacing: dp(8)
+
+					size_hint_y: None
+
+					height: self.minimum_height
+    
+                
+        BottomNav:
+            
+          
+
+<TransactionRow>:
+
+    size_hint_y: None
+    height: app.metrics.Size.HISTORY_ITEM_HEIGHT # height for increased two line note
+
+    padding: [app.metrics.Padding.CARD, dp(8)]
+
+    spacing: app.metrics.Spacing.NORMAL
+
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+    
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [app.metrics.Radius.CARD]
+
+    canvas.after:
+        Color:
+            rgba: app.metrics.Color.TEXT_SECONDARY
+
+        Line:
+            points: [self.x, self.y, self.right, self.y]
+
+            width: 1
+
+    BoxLayout:
+	    orientation: "vertical"
+	    padding: [app.metrics.Padding.CARD, dp(8)]
+	    spacing: dp(6)
+	    size_hint_y: None
+	    height: self.minimum_height
+
+	    # -------------------------
+	    # Row 1
+	    # -------------------------
+	    BoxLayout:
+	        size_hint_y: None
+	        height: dp(24)
+
+	        Label:
+	            text: root.category
+	            bold: True
+	            halign: "left"
+	            valign: "middle"
+	            text_size: self.size
+
+	        Label:
+	            text: root.amount
+	            size_hint_x: None
+	            width: dp(90)
+
+	            bold: True
+	            color: root.amount_color
+
+	            halign: "right"
+	            valign: "middle"
+	            text_size: self.size
+
+	    # -------------------------
+	    # Row 2
+	    # -------------------------
+	    Label:
+	        text: root.note
+
+	        color: app.metrics.Color.TEXT_SECONDARY
+
+	        halign: "left"
+	        valign: "top"
+
+	        text_size: self.width, None
+
+	        shorten: True
+	        shorten_from: "right"
+
+	        max_lines: 2
+
+	        size_hint_y: None
+	        height: dp(36)
+
+	    # -------------------------
+	    # Row 3
+	    # -------------------------
+	    BoxLayout:
+	        size_hint_y: None
+	        height: dp(24)
+
+	        Label:
+	            text: root.date
+
+	            font_size: app.metrics.Font.SMALL
+	            color: app.metrics.Color.TEXT_SECONDARY
+
+	            halign: "left"
+	            valign: "middle"
+
+	            text_size: self.size
+
+	        AnchorLayout:
+	            anchor_x: "right"
+	            anchor_y: "center"
+
+	            size_hint_x: None
+	            width: dp(64)
+
+	            BoxLayout:
+	                size_hint: None, None
+	                size: dp(56), dp(24)
+	                spacing: dp(6)
+
+	                AppButton:
+	                    markup: True
+	                    size_hint_x: None
+	                    width: dp(24)
+
+	                    background_normal: ""
+	                    background_down: ""
+	                    background_color: 0,0,0,0
+
+	                    text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+
+	                    on_press:
+	                        app.open_edit(root.transaction_id)
+
+	                AppDangerButton:
+	                    markup: True
+	                    size_hint_x: None
+	                    width: dp(24)
+
+	                    background_normal: ""
+	                    background_down: ""
+	                    background_color: 0,0,0,0
+
+	                    text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+
+	                    on_press:
+	                        app.delete_transaction(root.transaction_id)
+
+
+<DashboardTransactionRow>
+
+    size_hint_y: None
+    height: app.metrics.Size.RECENT_ITEM_HEIGHT
+
+    orientation: "vertical"
+
+    padding: [12, 10]
+	spacing: 3
+
+    canvas.before:
+        Color:
+            rgba: (.18, .18, .18, 1) if root.pressed else (.12, .12, .12, 1)
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(24)
+
+        Label:
+            text: root.category
+            bold: True
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
+
+        Label:
+            text: root.amount
+            bold: True
+            halign: "right"
+            valign: "middle"
+            text_size: self.size
+            color: root.amount_color
+
+    Label:
+        text: root.note
+        size_hint_y: None
+        height: dp(18)
+
+        halign: "left"
+        valign: "middle"
+
+        text_size: self.size
+
+        color: .75,.75,.75,1
+
+    Label:
+        text: root.date
+
+        size_hint_y: None
+        height: dp(16)
+
+        halign: "left"
+        valign: "middle"
+
+        text_size: self.size
+
+        color: .55,.55,.55,1
+
+<AddRecentTransactionRow>:
+    size_hint_y: None
+    height: app.metrics.Size.RECENT_ITEM_HEIGHT
+
+    orientation: "vertical"
+
+    padding: [12, 8]
+    spacing: 2
+
+    canvas.before:
+        Color:
+            rgba: (.18,.18,.18,1) if root.pressed else (.12,.12,.12,1)
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    BoxLayout:
+        size_hint_y: None
+        height: dp(24)
+
+        Label:
+            text: root.category
+            bold: True
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
+
+        Label:
+            text: root.amount
+            bold: True
+            color: root.amount_color
+            halign: "right"
+            valign: "middle"
+            text_size: self.size
+
+    Label:
+        text: root.note
+        size_hint_y: None
+        height: dp(18)
+        color: .75,.75,.75,1
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+
+    Label:
+        text: root.date
+        size_hint_y: None
+        height: dp(16)
+        color: .55,.55,.55,1
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+
+            
+
+<AddTransactionScreen>:
+
+    BoxLayout:
+        orientation: "vertical"
+
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+
+            BoxLayout:
+                orientation: "vertical"
+
+                size_hint_y: None
+                height: self.minimum_height
+
+                padding: [app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN + app.metrics.Size.BOTTOM_NAV_HEIGHT]
+                spacing: app.metrics.Spacing.NORMAL
+
+		        BoxLayout:
+				    size_hint_y: None
+				    height: dp(40)
+
+				    Label:
+				        font_name: "MaterialIcons"
+				        text: app.icons.ADD
+				        font_size: "24sp"
+				        size_hint_x: None
+				        width: dp(40)
+
+				    Label:
+				        text: "Add Transaction"
+				        bold: True
+				        font_size: app.metrics.Font.TITLE
+				        halign: "left"
+				        text_size: self.size
+
+		        # --------------------
+				# Balance Card
+				# --------------------
+
+				Card:
+
+					size_hint_y: None
+
+					height: app.metrics.Size.ADD_BALANCE_HEIGHT
+
+					BoxLayout:
+
+						orientation: "horizontal"
+
+						spacing: dp(4)
+
+						size_hint_y: None
+
+						height: dp(26)
+
+						Label:
+
+							font_name: "MaterialIcons"
+
+							text: app.icons.BALANCE
+
+							font_size: "18sp"
+
+							size_hint_x: None
+
+							width: dp(28)
+
+						Label:
+		                    text: "Balance"
+		                    bold: True
+		                    font_size: app.metrics.Font.CARD_TITLE
+		                    halign: "left"
+		                    valign: "middle"
+		                    text_size: self.size
+
+					Label:
+		                text: (f"-₹{abs(app.balance):,.0f}" if app.balance < 0 else f"₹{app.balance:,.0f}")
+
+		                font_size: app.metrics.Font.CARD_VALUE
+		                bold: True
+
+		                halign: "left"
+		                valign: "middle"
+		                text_size: self.size
+
+					BoxLayout:
+
+						size_hint_y: None
+
+						height: dp(20)
+
+						spacing: dp(16)
+
+						Label:
+
+							markup: True
+
+							text:
+								"[color=00ff00]Income[/color]"
+
+						Label:
+
+							text:
+								f"₹{app.income:,.0f}"
+
+							color: app.metrics.Color.INCOME
+
+						Label:
+
+							markup: True
+
+							text:
+								"[color=ff5555]Expense[/color]"
+
+						Label:
+
+							text:
+								f"₹{app.expense:,.0f}"
+
+							color: app.metrics.Color.EXPENSE
+		        
+
+		        AppTextInput:
+		            id: amount
+		            hint_text: "₹ Amount"
+		            
+		            input_filter: "float"
+		            
+		           
+		            
+		            halign: "center"
+
+		        AppSpinner:
+		            id: category
+		            text: "Food"
+		            values: app.categories
+		            
+		          
+		        AppTextInput:
+		            id: note
+		            hint_text: "Note (optional)"
+		            
+		            
+				
+				# --------------------
+				# Recurring Transaction
+				# --------------------
+
+				BoxLayout:
+					orientation: "horizontal"
+					size_hint_y: None
+					height: app.metrics.Size.TEXT_INPUT_HEIGHT
+					spacing: app.metrics.Spacing.NORMAL
+
+					CheckBox:
+						size_hint_x: None
+						width: dp(40)
+						active: app.recurring_enabled
+
+						on_active:
+							app.recurring_enabled = self.active
+
+					Label:
+						text: "Repeat every month"
+						halign: "left"
+						valign: "middle"
+						text_size: self.size
+
+					Label:
+					    text: "Expense only"
+
+					    color: .7, .7, .7, 1
+
+					    font_size: app.metrics.Font.SMALL
+
+					    size_hint_y: None
+
+					    height: dp(18)
+
+					    opacity: 1 if app.recurring_enabled else 0
+
+				AppTextInput:
+					id: recurring_day
+
+					hint_text: "Repeat on day (1–31)"
+			
+					input_filter: "int"
+
+					text: app.recurring_day
+
+					on_text:
+						app.recurring_day = self.text
+
+					opacity: 1 if app.recurring_enabled else 0
+
+					disabled: not app.recurring_enabled
+
+					
+					height: (app.metrics.Size.TEXT_INPUT_HEIGHT if app.recurring_enabled else 0 )
+
+		        
+
+		        # Income / Expense Buttons
+		        BoxLayout:
+		            size_hint_y: None
+		            height: app.metrics.Size.BUTTON_HEIGHT
+		            spacing: app.metrics.Spacing.NORMAL
+
+		            AppSuccessButton:
+    					text:"+ Income"
+
+		                on_press:
+						    app.recurring_enabled = False
+
+						    app.add_transaction(amount.text,category.text,note.text,"Income")
+						        
+
+
+		            AppDangerButton:
+    					text:"- Expense"
+
+		                on_press:
+		                    app.add_transaction(
+		                    amount.text,
+		                    category.text,
+		                    note.text,
+		                    "Expense")
+
+                # Widget:
+		        #     size_hint_y: None
+		        #     height: dp(4)
+
+		        # Recent Transactions Card
+				BoxLayout:
+					orientation: "vertical"
+					size_hint_y: None
+					height: self.minimum_height
+					
+
+					canvas.before:
+						Color:
+							rgba: .15, .15, .15, 1
+
+						RoundedRectangle:
+							pos: self.pos
+							size: self.size
+							radius: [15]
+
+					# -------------------------
+					# Header
+					# -------------------------
+					BoxLayout:
+						size_hint_y: None
+						height: dp(52)
+						padding: [dp(14), 0]
+
+						Label:
+							text: "Recent Transactions"
+							bold: True
+							font_size: app.metrics.Font.TITLE
+
+							halign: "left"
+							valign: "middle"
+							text_size: self.size
+					
+					Widget:
+						size_hint_y: None
+						height: app.metrics.Spacing.NORMAL
+
+					# -------------------------
+					# Recent Transaction List
+					# -------------------------
+					GridLayout:
+					    id: recent_list
+
+					    cols: 1
+
+					    spacing: app.metrics.Spacing.SMALL
+
+					    padding:
+					        [
+					        app.metrics.Padding.CARD,
+					        0,
+					        app.metrics.Padding.CARD,
+					        app.metrics.Padding.CARD
+					        ]
+
+					    size_hint_y: None
+
+					    height: self.minimum_height
+
+
+        BottomNav:
+        
+
+
+<HistoryScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+
+        padding: [app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN,app.metrics.Padding.SCREEN,0]
+            
+
+        spacing: app.metrics.Spacing.NORMAL
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(48)
+            padding: [app.metrics.Padding.SCREEN, 0]
+
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.HISTORY
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
+
+            Label:
+                text: "History"
+                font_size: app.metrics.Font.TITLE
+                bold: True                
+                halign: "left"
+                valign: "middle"
+                text_size: self.size
+        
+        # search box
+    	Card:	
+		    size_hint_y: None
+		    height: dp(155)
+
+		    BoxLayout:
+		        orientation: "vertical"
+		        spacing: app.metrics.Spacing.NORMAL
+
+		        BoxLayout:
+		            size_hint_y: None
+		            height: app.metrics.Size.TEXT_INPUT_HEIGHT
+
+		            Label:
+		                font_name: "MaterialIcons"
+		                text: app.icons.SEARCH
+		                font_size: "20sp"
+		                size_hint_x: None
+		                width: dp(36)
+
+		            AppTextInput:
+		                hint_text: "Search transactions"
+
+		                multiline: False
+
+		                background_normal: ""
+		                background_active: ""
+
+		                on_text:
+		                    app.update_search(self.text)
+
+		        AppSpinner:
+		            text: "All"
+
+		            values:
+		                (
+		                "All",
+		                "Income",
+		                "Expense"
+		                )
+		            
+		            on_text:
+		                app.update_filter(self.text)
+
+		        AppSpinner:
+		            text: "Newest First"
+
+		            values:
+		                (
+		                "Newest First",
+		                "Oldest First",
+		                "Highest Amount",
+		                "Lowest Amount",
+		                "Category A-Z"
+		                )
+
+
+		            on_text:
+		                app.update_sort(self.text)
+
+
+    	# Undo Delete
+        BoxLayout:
+
+		    size_hint_y: None
+
+		    height: dp(48) if app.show_undo else 0
+
+		    opacity: 1 if app.show_undo else 0
+
+		    spacing: dp(8)
+
+		    Label:
+		        text: "Transaction deleted"
+
+		    AppPrimaryButton:
+		        text: "Undo"
+
+		        size_hint_x: None
+
+		        width: dp(90)
+
+		        on_press:
+		            app.undo_delete()
+        
+        # History Transaction List
+        Card:
+        	size_hint_y: 1
+		    RecycleView:
+
+		        viewclass: "TransactionRow"
+
+		        data: app.transaction_data
+
+		        RecycleBoxLayout:
+		            default_size: None, app.metrics.Size.HISTORY_ITEM_HEIGHT
+		            default_size_hint: 1, None
+
+		            size_hint_y: None
+
+		            height: self.minimum_height
+
+		            orientation: "vertical"
+
+		            spacing: dp(6)
+
+        Widget:
+		    size_hint_y: None
+		    height: dp(8)
+		        
+        BottomNav:
+
+<ReportScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+        
+        Label:
+            text: app.expense_summary()
+            
+        Label:
+            text: app.category_report()
+
+        
+        
+        BottomNav:
+
+# under view history                
+<EditTransactionScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 10
+        spacing: 10
+        
+        Label:
+            text: "Transaction Details"
+            size_hint_y: None
+            height: dp(26)
+            bold: True
+            font_size: app.metrics.Font.CARD_TITLE
+            halign: "left"
+            text_size: self.size
+
+        AppTextInput:
+            id: amount
+            hint_text: "Amount"
+
+        AppTextInput:
+            id: category
+            hint_text: "Category"
+        
+        AppTextInput:
+            id: note
+            hint_text: "note"
+        
+        AppTextInput:
+            id: date
+            hint_text: "Date"
+        
+        AppButton:
+            text: "Change Date"
+
+            on_press:
+                app.edit_date_popup()
+        
+
+        AppButton:
+            text: "Save"
+
+            on_press:
+                app.save_edit(
+                amount.text,
+                category.text,
+                note.text,
+                date.text
+                )
+
+        AppDangerButton:
+            text: "Cancel"
+
+            on_press:
+                app.go_to_screen("history")
+                
+<StatisticsRow>
+
+    size_hint_y: None
+    height: dp(90)
+
+    padding: dp(12)
+    spacing: dp(8)
+
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    BoxLayout:
+        orientation: "vertical"
+
+        Label:
+            text: root.category
+            bold: True
+            halign: "left"
+            text_size: self.size
+
+        Label:
+            text: "Total: " + root.total
+            halign: "left"
+            text_size: self.size
+
+        Label:
+            text: "Months: " + root.months + "    Avg/Month: " + root.average
+            color: app.metrics.Color.TEXT_SECONDARY
+            font_size: app.metrics.Font.SMALL
+            halign: "left"
+            text_size: self.size
+
+
+<StatisticsScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
+
+        ScrollView:
+
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: app.metrics.Spacing.NORMAL
+
+                Card:
+                    size_hint_y: None
+                    height: dp(120)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Overview"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(30)
+
+                        Label:
+                            text: "Balance: " + app.stats_balance
+
+                        Label:
+                            text: "Income: " + app.stats_income
+
+                        Label:
+                            text: "Expense: " + app.stats_expense
+
+                        Label:
+                            text: "Transactions: " + app.stats_transactions
+
+                Card:
+                    size_hint_y: None
+                    height: dp(120)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Highlights"
+                            bold: True
+                            size_hint_y: None
+                            height: dp(30)
+
+                        Label:
+                            text: "Highest Income: " + app.stats_highest_income
+
+                        Label:
+                            text: "Highest Expense: " + app.stats_highest_expense
+
+                        Label:
+                            text: "Top Category: " + app.stats_top_category
+
+                        Label:
+                            text: "Expense Categories: " + app.stats_category_count
+
+                Card:
+                    size_hint_y: None
+                    height: dp(48)
+
+                    Label:
+                        text: "Category Statistics"
+                        bold: True
+
+                RecycleView:
+                    size_hint_y: None
+                    height: max(dp(120),len(app.statistics_data) * dp(94))
+
+                    viewclass: "StatisticsRow"
+
+                    data: app.statistics_data
+
+                    RecycleBoxLayout:
+                        default_size: None, dp(90)
+                        default_size_hint: 1, None
+                        size_hint_y: None
+                        height: self.minimum_height
+                        orientation: "vertical"
+                        spacing: dp(8)
+
+        BottomNav:
+
+<DataManagementScreen>:
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
+
+        # -------------------------
+        # Header
+        # -------------------------
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.DATABASE
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
+
+            Label:
+                text: "Data Management"
+                bold: True
+                font_size: app.metrics.Font.TITLE
+                halign: "left"
+                text_size: self.size
+
+        ScrollView:
+
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: app.metrics.Spacing.NORMAL
+
+                # -------------------------
+				# Current Database
+				# -------------------------
+				Card:
+				    size_hint_y: None
+				    height: dp(85)
+
+				    BoxLayout:
+				        orientation: "vertical"
+
+				        Label:
+				            text: "Current Database"
+
+				            bold: True
+
+				            size_hint_y: None
+				            height: dp(26)
+
+				        Label:
+				            text: app.current_database
+
+				            font_size: app.metrics.Font.CARD_VALUE
+
+				            bold: True
+
+				            halign: "center"
+				            valign: "middle"
+
+            				text_size: self.size
+	                        
+	
+	
+
+                # -------------------------
+                # Databases
+                # -------------------------
+                Card:
+                    size_hint_y: None
+                    height: dp(320)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Available Databases"
+
+                            bold: True
+
+                            size_hint_y: None
+                            height: dp(40)
+
+                        RecycleView:
+
+                            viewclass: "DatabaseRow"
+
+                            data: app.database_data
+
+                            RecycleBoxLayout:
+
+                                default_size: None, dp(50)
+                                default_size_hint: 1,None
+
+                                size_hint_y: None
+                                height: self.minimum_height
+
+                                orientation: "vertical"
+
+                        Widget:
+						    size_hint_y: None
+						    height: dp(10)
+
+		                AppPrimaryButton:
+		                    text: "Create New Database"
+
+		                    on_press:
+		                        app.create_database_popup()
+
+                # -------------------------
+                # Backup
+                # -------------------------
+                Card:
+                    size_hint_y: None
+                    height: dp(170)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Backup & Restore"
+
+                            bold: True
+
+                            size_hint_y: None
+                            height: dp(36)
+
+                        AppButton:
+						    markup: True
+
+						    text:
+						        f"[font=MaterialIcons]{app.icons.BACKUP}[/font]  Backup Database"
+
+						    on_press:
+						        app.backup_data()
+
+
+						AppButton:
+						    markup: True
+
+						    text:
+						        f"[font=MaterialIcons]{app.icons.IMPORT}[/font]  Import Database"
+
+						    on_press:
+						        app.show_import_popup()
+
+
+						AppButton:
+						    markup: True
+
+						    text:
+						        f"[font=MaterialIcons]{app.icons.EXPORT}[/font]  Export CSV"
+
+						    on_press:
+						        app.export_csv()
+
+                # -------------------------
+                # Danger Zone
+                # -------------------------
+                Card:
+                    size_hint_y: None
+                    height: dp(110)
+
+                    BoxLayout:
+                        orientation: "vertical"
+
+                        Label:
+                            text: "Danger Zone"
+
+                            color: app.metrics.Color.EXPENSE
+
+                            bold: True
+
+                            size_hint_y: None
+                            height: dp(36)
+
+                        AppDangerButton:
+                            text: "Clear All Transactions"
+
+                            on_press:
+                                app.clear_all_data()
+
+        BottomNav:
+
+
+<DatabaseRow@BoxLayout>
+
+    db_name: ""
+
+    size_hint_y: None
+    height: dp(56)
+
+    padding: [12,0]
+
+    spacing: dp(6)
+
+    canvas.before:
+        Color:
+            rgba:app.metrics.Color.PRIMARY if root.db_name == app.current_database else app.metrics.Color.SURFACE
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    Label:
+
+        text:
+            root.db_name + (
+            "   (Current)"
+            if root.db_name == app.current_database
+            else ""
+            )
+
+        bold:
+            root.db_name == app.current_database
+
+        halign: "left"
+
+        valign: "middle"
+
+        text_size: self.size
+
+    AppIconButton:
+        text:
+            f"[font=MaterialIcons]{app.icons.OPEN}[/font]"
+
+        on_press:
+            app.switch_database(root.db_name)
+
+    AppIconButton:
+        text:
+            f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+
+        on_press:
+            app.rename_database_popup(root.db_name)
+
+    AppIconButton:
+        text:
+            f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+
+        on_press:
+            app.delete_database_popup(root.db_name)
+
+<ManageTransactionsScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 10
+        spacing: 10
+
+        Label:
+		    text: ("Recurring transactions are now created \n from the Add screen.")
+
+		    halign: "center"
+		    valign: "middle"
+		    text_size: self.size
+
+		    size_hint_y: None
+		    height: dp(50)
+
+		    color: .8, .8, .8, 1
+
+        AppButton:
+            text: "Manage Recurring Transactions"
+
+            on_press:
+                app.open_manage_recurring()
+        
+        AppButton:
+            text: "Manage Categories"
+
+            on_press:
+                app.go_to_screen("categories")
+
+        
+        
+        BottomNav:
+       
+# this screen shows all reccuring transaction and delete edit function       
+<RecurringRow>
+
+    size_hint_y: None
+    height: dp(96)
+
+    padding: [12,8]
+    spacing: 8
+
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    BoxLayout:
+        orientation: "vertical"
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(24)
+
+            Label:
+                text: root.category
+                bold: True
+                halign: "left"
+                text_size: self.size
+
+            Label:
+                text: root.amount
+                bold: True
+                halign: "right"
+                text_size: self.size
+
+        Label:
+            text: root.day
+            color: app.metrics.Color.TEXT_SECONDARY
+            halign: "left"
+            text_size: self.size
+
+        Label:
+            text: "Last Added: " + root.last_added
+            color: app.metrics.Color.TEXT_SECONDARY
+            font_size: app.metrics.Font.SMALL
+            halign: "left"
+            text_size: self.size
+
+    AnchorLayout:
+        anchor_x: "right"
+        anchor_y: "center"
+        size_hint_x: None
+        width: dp(70)
+
+        BoxLayout:
+            size_hint: None,None
+            size: dp(64),dp(28)
+            spacing: dp(8)
+
+            AppIconButton:
+                text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+
+                on_press:
+                    app.edit_recurring(root.index)
+
+            AppIconButton:
+                text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+
+                on_press:
+                    app.delete_recurring(root.index)
+
+# dashboard->manage transaction-> manage recuring screen
+<ManageRecurringScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.REPEAT
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
+
+            Label:
+                text: "Recurring Transactions"
+                bold: True
+                font_size: app.metrics.Font.TITLE
+                halign: "left"
+                text_size: self.size
+
+        Card:
+
+            RecycleView:
+
+                viewclass: "RecurringRow"
+
+                data: app.recurring_data
+
+                RecycleBoxLayout:
+
+                    default_size: None, dp(100)
+                    default_size_hint: 1,None
+
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    orientation: "vertical"
+
+                    spacing: dp(8)
+
+        BottomNav:
+
+<CategoryScreen>
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: app.metrics.Padding.SCREEN
+        spacing: app.metrics.Spacing.NORMAL
+
+        BoxLayout:
+            size_hint_y: None
+            height: dp(40)
+
+            Label:
+                font_name: "MaterialIcons"
+                text: app.icons.CATEGORY
+                font_size: "24sp"
+                size_hint_x: None
+                width: dp(40)
+
+            Label:
+                text: "Categories"
+                bold: True
+                font_size: app.metrics.Font.TITLE
+                halign: "left"
+                text_size: self.size
+
+        Card:
+            size_hint_y: None
+            height: dp(120)
+
+            spacing: app.metrics.Spacing.NORMAL
+
+            AppTextInput:
+                id: category_name
+                hint_text: "New Category"
+
+            AppPrimaryButton:
+                text: "Add Category"
+
+                on_press:
+                    app.add_category(category_name.text)
+
+        Card:
+
+            RecycleView:
+
+                viewclass: "CategoryRow"
+
+                data: app.category_data
+
+                RecycleBoxLayout:
+
+                    default_size: None, dp(56)
+                    default_size_hint: 1, None
+
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    orientation: "vertical"
+
+        BottomNav:
+
+
+<CategoryRow>
+
+    size_hint_y: None
+    height: dp(56)
+
+    padding: [12,0]
+    spacing: dp(8)
+
+    canvas.before:
+        Color:
+            rgba: app.metrics.Color.CARD
+
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12]
+
+    Label:
+        text: root.text
+
+        bold: True
+
+        halign: "left"
+        valign: "middle"
+
+        text_size: self.size
+
+    AppIconButton:
+
+        text: f"[font=MaterialIcons]{app.icons.EDIT}[/font]"
+
+        on_press:
+            app.edit_category(root.category_id,root.text)
+
+    AppIconButton:
+
+        text: f"[font=MaterialIcons]{app.icons.DELETE}[/font]"
+
+        on_press:
+            app.delete_category(root.category_id)
+
+
+<BottomNav@BoxLayout>
+
+    size_hint_y: None
+    height: app.metrics.Size.BOTTOM_NAV_HEIGHT
+
+    Button:
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.HOME}[/font]\nHome"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (app.metrics.Color.NAV_ACTIVE) if app.current_screen in ["dashboard","statistics","datamanagement","manage_transactions","manage_recurring","categories"] else (app.metrics.Color.NAV_INACTIVE)
+        on_press: app.go_to_screen("dashboard")
+
+    Button:
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.ADD}[/font]\nAdd"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (app.metrics.Color.NAV_ACTIVE) if app.current_screen == "add" else (app.metrics.Color.NAV_INACTIVE)
+        on_press: app.go_to_screen("add")
+
+    Button:
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.HISTORY}[/font]\nHistory"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: (app.metrics.Color.NAV_ACTIVE) if app.current_screen == "history" else (app.metrics.Color.NAV_INACTIVE)
+        on_press: app.go_to_screen("history")
+
+
+    Button:
+        markup: True
+        text: f"[font=MaterialIcons]{app.icons.MORE}[/font]\nMore"
+        font_size: app.metrics.Font.NAVIGATION
+        background_color: app.metrics.Color.NAV_INACTIVE
+        on_press: app.more_menu()
+

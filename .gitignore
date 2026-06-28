@@ -24,3 +24,10 @@ bin/
 
 deleted.text
 *.csv
+
+# python virtual env
+.venv/
+
+# Windows Explorer
+[Dd]esktop.ini
+Thumbs.db
