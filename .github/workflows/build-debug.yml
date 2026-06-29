@@ -1,25 +1,14 @@
-- name: Build Debug APK
-  run: |
-    set -o pipefail
-    buildozer android debug 2>&1 | tee build.log
-
-- name: Upload build log
-  if: always()
-  uses: actions/upload-artifact@v4
-  with:
-    name: build-logs
-    path: |
-      build.log
-      .buildozer/logs/**
+name: Build Debug APK
 
 on:
   workflow_dispatch:
+
 
 jobs:
   build:
     runs-on: ubuntu-22.04
 
-    steps:
+    steps:    
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -72,7 +61,17 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          buildozer android debug
+          set -o pipefail
+          buildozer android debug 2>&1 | tee build.log
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            build.log
+            .buildozer/logs/**
 
       - name: Upload APK
         if: always()
@@ -81,4 +80,3 @@ jobs:
           name: AKM-FinanceManager-Debug
           path: |
             bin/*.apk
-            .buildozer/logs/**
